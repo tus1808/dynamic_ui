@@ -1,0 +1,189 @@
+<mxfile host="app.diagrams.net" agent="OpenAI" pages="2">
+  <diagram id="flow-page" name="App Flow">
+    <mxGraphModel dx="2020" dy="1121" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="start" parent="1" style="ellipse;whiteSpace=wrap;html=1;" value="App Start" vertex="1">
+          <mxGeometry height="60" width="120" x="110" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="loadcfg" parent="1" style="rounded=1;whiteSpace=wrap;html=1;" value="Load app_config.json&#xa;Load layout.json&#xa;Create fullscreen window" vertex="1">
+          <mxGeometry height="90" width="220" x="290" y="315" as="geometry" />
+        </mxCell>
+        <mxCell id="readmode" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="Read Mode&#xa;- Show background&#xa;- Render value boxes&#xa;- UART updates labels&#xa;- Drag disabled" vertex="1">
+          <mxGeometry height="120" width="220" x="590" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="hotkey" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="Ctrl + Shift + Alt + F12" vertex="1">
+          <mxGeometry height="60" width="200" x="880" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="dialog" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Password Dialog" vertex="1">
+          <mxGeometry height="70" width="160" x="1150" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="decision" parent="1" style="rhombus;whiteSpace=wrap;html=1;" value="Password correct?" vertex="1">
+          <mxGeometry height="80" width="140" x="1390" y="325" as="geometry" />
+        </mxCell>
+        <mxCell id="editor" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="Editor Mode&#xa;- Select item&#xa;- Drag item&#xa;- Save layout&#xa;- Exit editor" vertex="1">
+          <mxGeometry height="120" width="220" x="1620" y="300" as="geometry" />
+        </mxCell>
+        <mxCell id="wrong" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="Show error&#xa;Stay in Read Mode" vertex="1">
+          <mxGeometry height="80" width="140" x="1390" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="save" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Ctrl+S&#xa;Save layout.json" vertex="1">
+          <mxGeometry height="70" width="180" x="1620" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="exit" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="Esc&#xa;Return to Read Mode" vertex="1">
+          <mxGeometry height="70" width="180" x="1850" y="475" as="geometry" />
+        </mxCell>
+        <mxCell id="uart" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="UART Thread&#xa;Read serial&#xa;Parse frame&#xa;g_idle_add() to UI" vertex="1">
+          <mxGeometry height="100" width="220" x="590" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="start" style="endArrow=block;html=1;" target="loadcfg">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="loadcfg" style="endArrow=block;html=1;" target="readmode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="readmode" style="endArrow=block;html=1;" target="hotkey">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="hotkey" style="endArrow=block;html=1;" target="dialog">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="dialog" style="endArrow=block;html=1;" target="decision">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="decision" style="endArrow=block;html=1;" target="editor" value="Yes">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e7" edge="1" parent="1" source="decision" style="endArrow=block;html=1;" target="wrong" value="No">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8" edge="1" parent="1" source="wrong" style="endArrow=block;html=1;" target="readmode">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1460" y="605" />
+              <mxPoint x="700" y="605" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e9" edge="1" parent="1" source="editor" style="endArrow=block;html=1;" target="save">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="editor" style="endArrow=block;html=1;" target="exit">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="exit" style="endArrow=block;html=1;" target="readmode">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1940" y="605" />
+              <mxPoint x="700" y="605" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e12" edge="1" parent="1" source="uart" style="dashed=1;endArrow=block;html=1;" target="readmode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="structure-page" name="Project Structure">
+    <mxGraphModel dx="4225" dy="2596" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="app" parent="1" style="swimlane;whiteSpace=wrap;html=1;rounded=1;align=center;autosizeText=0;fontSize=17;startSize=23;" value="AppState&#xa;- mode&#xa;- window&#xa;- fixed&#xa;- background&#xa;- items[]&#xa;- config" vertex="1">
+          <mxGeometry height="390" width="220" x="650" y="60" as="geometry">
+            <mxRectangle height="160" width="140" x="660" y="60" as="alternateBounds" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="config" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="config.c / config.h&#xa;Load &amp; validate&#xa;app_config.json" vertex="1">
+          <mxGeometry height="90" width="200" x="120" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="layout" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" value="layout.c / layout.h&#xa;Load &amp; save layout.json" vertex="1">
+          <mxGeometry height="100" width="200" x="120" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="uart2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" value="uart.c / uart.h&#xa;Serial read&#xa;Parse frame&#xa;Publish updates" vertex="1">
+          <mxGeometry height="100" width="200" x="120" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="mode" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="mode.c / mode.h&#xa;Switch Read &lt;-&gt; Editor" vertex="1">
+          <mxGeometry height="80" width="200" x="120" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="auth" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="auth.c / auth.h&#xa;Password dialog&#xa;SHA-256 verify" vertex="1">
+          <mxGeometry height="90" width="180" x="130" y="-100" as="geometry" />
+        </mxCell>
+        <mxCell id="hotkey2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" value="hotkey.c / hotkey.h&#xa;Ctrl+Shift+Alt+F12" vertex="1">
+          <mxGeometry height="90" width="180" x="-170" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="window" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="ui/window.c&#xa;Create fullscreen window" vertex="1">
+          <mxGeometry height="80" width="190" x="960" y="-120" as="geometry" />
+        </mxCell>
+        <mxCell id="canvas" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="ui/canvas.c&#xa;GtkFixed canvas&#xa;Background + item placement" vertex="1">
+          <mxGeometry height="90" width="190" x="960" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="valueitem" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" value="ui/value_item.c&#xa;Create/update value box" vertex="1">
+          <mxGeometry height="100" width="190" x="960" y="390" as="geometry" />
+        </mxCell>
+        <mxCell id="editor2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="ui/editor.c&#xa;Select / drag / save" vertex="1">
+          <mxGeometry height="90" width="180" x="1250" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="read2" parent="1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" value="ui/read_mode.c&#xa;Display-only runtime" vertex="1">
+          <mxGeometry height="90" width="180" x="1250" y="240" as="geometry" />
+        </mxCell>
+        <mxCell id="assets" parent="1" style="shape=folder;whiteSpace=wrap;html=1;" value="assets/&#xa;background image&#xa;css" vertex="1">
+          <mxGeometry height="80" width="170" x="1260" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="cfgfiles" parent="1" style="shape=folder;whiteSpace=wrap;html=1;" value="config/&#xa;app_config.json&#xa;layout.json&#xa;state.json" vertex="1">
+          <mxGeometry height="130" width="200" x="-140" y="410" as="geometry" />
+        </mxCell>
+        <mxCell id="s1" edge="1" parent="1" source="config" style="endArrow=block;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="650" y="275" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s2" edge="1" parent="1" source="layout" style="endArrow=block;html=1;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" target="app">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" edge="1" parent="1" source="uart2" style="endArrow=block;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="650" y="440" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s4" edge="1" parent="1" source="mode" style="endArrow=block;html=1;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="650" y="165" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="s5" edge="1" parent="1" source="auth" style="endArrow=block;html=1;" target="mode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s6" edge="1" parent="1" source="hotkey2" style="endArrow=block;html=1;" target="mode">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s7" edge="1" parent="1" source="app" style="endArrow=block;html=1;" target="window">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s8" edge="1" parent="1" source="app" style="endArrow=block;html=1;" target="canvas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s9" edge="1" parent="1" source="app" style="endArrow=block;html=1;" target="valueitem">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s10" edge="1" parent="1" source="canvas" style="endArrow=block;html=1;" target="editor2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s11" edge="1" parent="1" source="canvas" style="endArrow=block;html=1;" target="read2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s12" edge="1" parent="1" source="assets" style="dashed=1;endArrow=block;html=1;" target="canvas">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s13" edge="1" parent="1" source="cfgfiles" style="dashed=1;endArrow=block;html=1;" target="config">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s14" edge="1" parent="1" source="cfgfiles" style="dashed=1;endArrow=block;html=1;" target="layout">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
