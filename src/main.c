@@ -3,7 +3,7 @@
 
 static void on_activate(GtkApplication *app, gpointer user_data)
 {
-  AppController *controller = app_controller_new();
+  AppController *controller = user_data;
   app_controller_activate(controller, app);
 }
 
@@ -19,6 +19,5 @@ int main(int argc, char **argv)
 
   g_object_unref(app);
   app_controller_free(controller);
-
   return status;
 }

@@ -10,6 +10,7 @@ project(
 
 gtk_dep  = dependency('gtk+-3.0')
 json_dep = dependency('json-glib-1.0')
+
 src_inc = include_directories('src')
 
 subdir('assets')

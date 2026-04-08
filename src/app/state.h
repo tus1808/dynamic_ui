@@ -2,6 +2,7 @@
 #define APP_STATE_H
 
 #include <gtk/gtk.h>
+#include "common/types.h"
 
 typedef struct
 {
@@ -9,11 +10,11 @@ typedef struct
   GtkWidget *window;
   GtkWidget *canvas;
 
-  char *background_path;
+  AppConfig config;
+  GPtrArray *layout_items;
 } AppState;
 
 AppState *app_state_new(void);
 void app_state_free(AppState *state);
-void app_state_set_background_path(AppState *state, const char *file_path);
 
 #endif
