@@ -1,6 +1,7 @@
 #include "app/controller.h"
 #include "ui/canvas.h"
 #include "ui/window.h"
+#include "ui/value_item.h"
 #include <glib.h>
 
 AppController *app_controller_new(void)

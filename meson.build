@@ -13,13 +13,17 @@ json_dep = dependency('json-glib-1.0')
 src_inc = include_directories('src')
 
 subdir('assets')
+subdir('config')
 
 app_sources = files(
   'src/main.c',
   'src/app/controller.c',
   'src/app/state.c',
+  'src/config/layout_store.c',
+  'src/config/loader.c',
   'src/ui/canvas.c',
-  'src/ui/window.c'
+  'src/ui/value_item.c',
+  'src/ui/window.c',
 )
 
 dynamic_ui = executable(

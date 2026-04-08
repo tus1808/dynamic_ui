@@ -1,0 +1,8 @@
+eventbox {
+  background-color: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.value-item {
+  background-color: rgba(0, 0, 0, 0.45);
+}

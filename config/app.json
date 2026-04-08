@@ -1,0 +1,5 @@
+{
+  "window_title": "Dynamic UI",
+  "background": "assets/background.png",
+  "layout_file_path": "config/layout.json"
+}
