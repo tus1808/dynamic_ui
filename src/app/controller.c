@@ -1,9 +1,11 @@
 #include "app/controller.h"
+
+#include <glib.h>
+
 #include "config/layout_store.h"
 #include "config/loader.h"
 #include "ui/canvas.h"
 #include "ui/window.h"
-#include "ui/value_item.h"
 
 #define CONFIG_FILE_PATH "config/app.json"
 #define LAYOUT_FILE_PATH = "config/layout.json"
@@ -11,7 +13,10 @@
 AppController *app_controller_new(void)
 {
   AppController *controller = g_new0(AppController, 1);
+
   controller->state = app_state_new();
+  controller->read_mode = read_mode_new(controller);
+
 
   return controller;
 }

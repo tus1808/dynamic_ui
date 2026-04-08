@@ -22,7 +22,9 @@ app_sources = files(
   'src/app/state.c',
   'src/config/layout_store.c',
   'src/config/loader.c',
+  'src/mode/manager.c',
   'src/ui/canvas.c',
+  'src/ui/read_mode.c',
   'src/ui/value_item.c',
   'src/ui/window.c',
 )

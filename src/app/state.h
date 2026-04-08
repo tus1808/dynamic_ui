@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include "common/types.h"
+#include "mode/manager.h"
 
 typedef struct
 {
@@ -12,6 +13,8 @@ typedef struct
 
   AppConfig config;
   GPtrArray *layout_items;
+
+  AppMode current_mode;
 } AppState;
 
 AppState *app_state_new(void);

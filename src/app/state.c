@@ -9,6 +9,7 @@ AppState *app_state_new(void)
   state->config.window_title = NULL;
   state->config.background = NULL;
   state->config.layout_file_path = NULL;
+  state->current_mode = APP_MODE_READ;
 
   return state;
 }

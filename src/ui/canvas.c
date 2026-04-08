@@ -65,3 +65,19 @@ void ui_canvas_render_items(GtkWidget *canvas, GPtrArray *items)
     gtk_widget_show(label);
   }
 }
+
+void ui_canvas_set_interactive(GtkWidget *canvas, gboolean interactive)
+{
+  if (!canvas)
+    return;
+
+  g_object_set_data(G_OBJECT(canvas), "canvas-interactive", GINT_TO_POINTER(interactive ? 1 : 0));
+}
+
+gboolean ui_canvas_is_interactive(GtkWidget *canvas)
+{
+  if (!canvas)
+    return FALSE;
+
+  return GPOINTER_TO_INT(g_object_get_data(G_OBJECT(canvas), "canvas-interactive")) != 0;
+}
