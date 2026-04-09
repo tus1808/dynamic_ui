@@ -19,5 +19,6 @@ typedef struct
 
 AppState *app_state_new(void);
 void app_state_free(AppState *state);
+void app_state_set_background_path(AppState *state, const char *file_path);
 
 #endif

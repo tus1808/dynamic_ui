@@ -1,14 +1,12 @@
 #include "app/state.h"
-#include "config/layout_store.h"
+
+#include <glib.h>
+
 #include "config/loader.h"
 
 AppState *app_state_new(void)
 {
   AppState *state = g_new0(AppState, 1);
-  state->layout_items = NULL;
-  state->config.window_title = NULL;
-  state->config.background = NULL;
-  state->config.layout_file_path = NULL;
   state->current_mode = APP_MODE_READ;
 
   return state;
@@ -22,8 +20,10 @@ void app_state_free(AppState *state)
   if (state->layout_items)
   {
     g_ptr_array_free(state->layout_items, TRUE);
+    state->layout_items = NULL;
   }
 
   config_loader_free_app_config(&state->config);
+
   g_free(state);
 }

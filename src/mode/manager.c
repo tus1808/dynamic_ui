@@ -1,5 +1,7 @@
 #include "mode/manager.h"
 
+#include <glib.h>
+
 #include "app/controller.h"
 #include "ui/read_mode.h"
 
@@ -53,6 +55,7 @@ void mode_manager_set_mode(ModeManager *manager, AppMode mode)
     {
       read_mode_exit(manager->controller->read_mode);
     }
+    break;
 
   case APP_MODE_EDITOR:
     break;

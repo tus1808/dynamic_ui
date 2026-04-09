@@ -1,5 +1,6 @@
 #include "ui/read_mode.h"
 
+#include <gdk/gdk.h>
 #include <glib.h>
 #include <gtk/gtk.h>
 
@@ -50,6 +51,8 @@ void read_mode_enter(ReadMode *mode)
       gdk_window_set_cursor(gdk_window, NULL);
     }
   }
+
+  g_print("[MODE] Enter READ mode\n");
 }
 
 void read_mode_exit(ReadMode *mode)

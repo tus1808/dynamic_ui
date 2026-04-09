@@ -16,7 +16,7 @@ AppController *app_controller_new(void)
 
   controller->state = app_state_new();
   controller->read_mode = read_mode_new(controller);
-
+  controller->mode_manager = mode_manager_new(controller);
 
   return controller;
 }
@@ -26,7 +26,10 @@ void app_controller_free(AppController *controller)
   if (!controller)
     return;
 
+  mode_manager_free(controller->mode_manager);
+  read_mode_free(controller->read_mode);
   app_state_free(controller->state);
+
   g_free(controller);
 }
 
@@ -61,6 +64,8 @@ void app_controller_activate(AppController *controller, GtkApplication *app)
   {
     gtk_window_set_title(GTK_WINDOW(controller->state->window), controller->state->config.window_title);
   }
+
+  read_mode_enter(controller->read_mode);
 
   gtk_widget_show_all(controller->state->window);
 }
