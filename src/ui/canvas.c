@@ -1,5 +1,4 @@
 #include "ui/canvas.h"
-#include "common/types.h"
 
 GtkWidget *ui_canvas_create(void)
 {
@@ -55,15 +54,18 @@ void ui_canvas_render_items(GtkWidget *canvas, GPtrArray *items)
   for (guint i = 0; i < items->len; i++)
   {
     LayoutItem *item = g_ptr_array_index(items, i);
+    GtkWidget *widget;
+
     if (!item)
       continue;
 
-    GtkWidget *label = gtk_label_new(item->value ? item->value : "");
-    gtk_widget_set_size_request(label, item->width, item->height);
+    widget = ui_value_item_create(item);
+    if (!widget)
+      continue;
 
-    gtk_widget_set_name(label, "value-item");
-    gtk_fixed_put(GTK_FIXED(canvas), label, item->x, item->y);
-    gtk_widget_show(label);
+    g_object_set_data(G_OBJECT(widget), "layout-item", item);
+    gtk_fixed_put(GTK_FIXED(canvas), widget, item->x, item->y);
+    gtk_widget_show(widget);
   }
 }
 
@@ -81,4 +83,57 @@ gboolean ui_canvas_is_interactive(GtkWidget *canvas)
     return FALSE;
 
   return GPOINTER_TO_INT(g_object_get_data(G_OBJECT(canvas), "canvas-interactive")) != 0;
+}
+
+void ui_canvas_set_selected_item(GtkWidget *canvas, GtkWidget *item_widget)
+{
+  GtkWidget *old_item;
+
+  if (!canvas)
+    return;
+
+  old_item = g_object_get_data(G_OBJECT(canvas), "selected-item");
+  if (old_item && old_item != item_widget)
+  {
+    ui_value_item_set_selected(old_item, FALSE);
+  }
+
+  g_object_set_data(G_OBJECT(canvas), "selected-item", item_widget);
+
+  if (item_widget)
+  {
+    ui_value_item_set_selected(item_widget, TRUE);
+  }
+}
+
+GtkWidget *ui_canvas_get_selected_item(GtkWidget *canvas)
+{
+  if (!canvas)
+    return NULL;
+
+  return g_object_get_data(G_OBJECT(canvas), "selected-item");
+}
+
+void ui_canvas_clear_selection(GtkWidget *canvas)
+{
+  ui_canvas_set_selected_item(canvas, NULL);
+}
+
+GtkWidget *ui_canvas_add_item(GtkWidget *canvas, LayoutItem *item)
+{
+  GtkWidget *widget;
+
+  if (!GTK_IS_FIXED(canvas) || item)
+    return NULL;
+
+  widget = ui_value_item_create(item);
+  if (!widget)
+    return NULL;
+
+  g_object_set_data(G_OBJECT(widget), "layout_item", item);
+
+  gtk_fixed_put(GTK_FIXED(canvas), widget, item->x, item->y);
+  gtk_widget_show(widget);
+
+  return widget;
 }

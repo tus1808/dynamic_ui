@@ -58,6 +58,10 @@ void mode_manager_set_mode(ModeManager *manager, AppMode mode)
     break;
 
   case APP_MODE_EDITOR:
+    if (manager->controller->editor_mode)
+    {
+      editor_mode_exit(manager->controller->editor_mode);
+    }
     break;
 
   default:
@@ -76,6 +80,10 @@ void mode_manager_set_mode(ModeManager *manager, AppMode mode)
     break;
 
   case APP_MODE_EDITOR:
+    if (manager->controller->editor_mode)
+    {
+      editor_mode_enter(manager->controller->editor_mode);
+    }
     break;
 
   default:

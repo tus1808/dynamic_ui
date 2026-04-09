@@ -1,6 +1,7 @@
 #include "app/controller.h"
 
 #include <glib.h>
+#include <gdk/gdk.h>
 
 #include "config/layout_store.h"
 #include "config/loader.h"
@@ -10,12 +11,49 @@
 #define CONFIG_FILE_PATH "config/app.json"
 #define LAYOUT_FILE_PATH = "config/layout.json"
 
+static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
+{
+  AppController *controller = user_data;
+
+  if (!controller || !controller->mode_manager)
+    return FALSE;
+
+  gboolean ctrl = (event->state & GDK_CONTROL_MASK);
+
+  if (event->keyval == GDK_KEY_Escape)
+  {
+    mode_manager_enter_read_mode(controller->mode_manager);
+    return TRUE;
+  }
+
+  if (ctrl && event->keyval == GDK_KEY_s)
+  {
+    if (controller->state->layout_items)
+    {
+      layout_store_save(controller->state->config.layout_file_path, controller->state->layout_items);
+      g_print("[LAYOUT] Saved\n");
+    }
+
+    return TRUE;
+  }
+
+  if (event->keyval == GDK_KEY_F12)
+  {
+    mode_manager_enter_editor_mode(controller->mode_manager);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
 AppController *app_controller_new(void)
 {
   AppController *controller = g_new0(AppController, 1);
 
   controller->state = app_state_new();
   controller->read_mode = read_mode_new(controller);
+  controller->editor_mode = editor_mode_new(controller);
   controller->mode_manager = mode_manager_new(controller);
 
   return controller;
@@ -28,6 +66,7 @@ void app_controller_free(AppController *controller)
 
   mode_manager_free(controller->mode_manager);
   read_mode_free(controller->read_mode);
+  editor_mode_free(controller->editor_mode);
   app_state_free(controller->state);
 
   g_free(controller);
@@ -64,6 +103,9 @@ void app_controller_activate(AppController *controller, GtkApplication *app)
   {
     gtk_window_set_title(GTK_WINDOW(controller->state->window), controller->state->config.window_title);
   }
+  gtk_widget_add_events(controller->state->window, GDK_KEY_PRESS_MASK);
+
+  g_signal_connect(controller->state->window, "key-press-event", G_CALLBACK(on_key_press), controller);
 
   read_mode_enter(controller->read_mode);
 
