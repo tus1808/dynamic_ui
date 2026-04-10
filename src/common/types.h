@@ -8,6 +8,7 @@ typedef struct
   gchar *window_title;
   gchar *background;
   gchar *layout_file_path;
+  gchar *css_file_path;
 } AppConfig;
 
 typedef struct

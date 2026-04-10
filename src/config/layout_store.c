@@ -1,5 +1,7 @@
 #include "config/layout_store.h"
+
 #include <json-glib/json-glib.h>
+#include <glib.h>
 
 static LayoutItem *layout_item_new(void)
 {
@@ -22,16 +24,16 @@ static void add_item_to_builder(JsonBuilder *builder, const LayoutItem *item)
   json_builder_add_string_value(builder, item->_id ? item->_id : "");
 
   json_builder_set_member_name(builder, "x");
-  json_builder_add_string_value(builder, item->x);
+  json_builder_add_int_value(builder, item->x);
 
   json_builder_set_member_name(builder, "y");
-  json_builder_add_string_value(builder, item->y);
+  json_builder_add_int_value(builder, item->y);
 
   json_builder_set_member_name(builder, "width");
-  json_builder_add_string_value(builder, item->width);
+  json_builder_add_int_value(builder, item->width);
 
   json_builder_set_member_name(builder, "height");
-  json_builder_add_string_value(builder, item->height);
+  json_builder_add_int_value(builder, item->height);
 
   json_builder_set_member_name(builder, "value");
   json_builder_add_string_value(builder, item->value ? item->value : "");
@@ -51,10 +53,7 @@ gboolean layout_store_save(const char *file_path, GPtrArray *items)
     return FALSE;
 
   builder = json_builder_new();
-  json_builder_begin_object(builder);
-  json_builder_set_member_name(builder, "items");
   json_builder_begin_array(builder);
-
   for (guint i = 0; i < items->len; i++)
   {
     LayoutItem *item = g_ptr_array_index(items, i);
@@ -63,9 +62,7 @@ gboolean layout_store_save(const char *file_path, GPtrArray *items)
 
     add_item_to_builder(builder, item);
   }
-
   json_builder_end_array(builder);
-  json_builder_end_object(builder);
 
   root = json_builder_get_root(builder);
 

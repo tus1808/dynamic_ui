@@ -2,6 +2,7 @@
 
 #include <glib.h>
 #include <gdk/gdk.h>
+#include <gtk/gtk.h>
 
 #include "config/layout_store.h"
 #include "config/loader.h"
@@ -9,7 +10,34 @@
 #include "ui/window.h"
 
 #define CONFIG_FILE_PATH "config/app.json"
-#define LAYOUT_FILE_PATH = "config/layout.json"
+
+static void app_controller_load_css(const char *file_path)
+{
+  GtkCssProvider *provider;
+  GdkScreen *screen;
+  GError *error = NULL;
+
+  if (!file_path)
+    return;
+
+  provider = gtk_css_provider_new();
+  screen = gdk_screen_get_default();
+
+  if (!gtk_css_provider_load_from_path(provider, file_path, &error))
+  {
+    g_warning("Failed to load CSS '%s': %s", file_path, error ? error->message : "unknown error");
+    g_clear_error(&error);
+    g_object_unref(provider);
+
+    return;
+  }
+
+  g_print("[CSS] Loaded: %s\n", file_path);
+
+  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+
+  g_object_unref(provider);
+}
 
 static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
 {
@@ -83,6 +111,7 @@ void app_controller_activate(AppController *controller, GtkApplication *app)
     g_warning("Failed to load app config");
     return;
   }
+  app_controller_load_css(controller->state->config.css_file_path);
 
   controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
   if (!controller->state->layout_items)

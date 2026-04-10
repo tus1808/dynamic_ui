@@ -94,16 +94,12 @@ void ui_canvas_set_selected_item(GtkWidget *canvas, GtkWidget *item_widget)
 
   old_item = g_object_get_data(G_OBJECT(canvas), "selected-item");
   if (old_item && old_item != item_widget)
-  {
     ui_value_item_set_selected(old_item, FALSE);
-  }
 
   g_object_set_data(G_OBJECT(canvas), "selected-item", item_widget);
 
   if (item_widget)
-  {
     ui_value_item_set_selected(item_widget, TRUE);
-  }
 }
 
 GtkWidget *ui_canvas_get_selected_item(GtkWidget *canvas)

@@ -116,7 +116,7 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
   return TRUE;
 }
 
-static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpointer user_date)
+static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpointer user_data)
 {
   g_object_set_data(G_OBJECT(widget), "dragging", GINT_TO_POINTER(0));
   g_object_set_data(G_OBJECT(widget), "resizing", GINT_TO_POINTER(0));
@@ -137,7 +137,7 @@ GtkWidget *ui_value_item_create(const LayoutItem *item)
   event_box = gtk_event_box_new();
   gtk_style_context_add_class(
       gtk_widget_get_style_context(event_box),
-      "value-item");
+      "event-box");
   gtk_widget_set_size_request(event_box, item->width, item->height);
 
   box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
@@ -183,19 +183,21 @@ void ui_value_item_set_value(GtkWidget *widget, const char *value)
 
 void ui_value_item_set_selected(GtkWidget *widget, gboolean selected)
 {
+  GtkStyleContext *context;
+
   if (!widget)
     return;
+
+  context = gtk_widget_get_style_context(widget);
 
   g_object_set_data(G_OBJECT(widget), "selected", GINT_TO_POINTER(selected ? 1 : 0));
 
   if (selected)
   {
-    gtk_style_context_add_class(gtk_widget_get_style_context(widget), "selected");
+    gtk_style_context_add_class(context, "selected");
   }
   else
-  {
-    gtk_style_context_remove_class(gtk_widget_get_style_context(widget), "selected");
-  }
+    gtk_style_context_remove_class(context, "selected");
 }
 
 gboolean ui_value_item_is_selected(GtkWidget *widget)
