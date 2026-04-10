@@ -119,7 +119,7 @@ GtkWidget *ui_canvas_add_item(GtkWidget *canvas, LayoutItem *item)
 {
   GtkWidget *widget;
 
-  if (!GTK_IS_FIXED(canvas) || item)
+  if (!GTK_IS_FIXED(canvas) || !item)
     return NULL;
 
   widget = ui_value_item_create(item);

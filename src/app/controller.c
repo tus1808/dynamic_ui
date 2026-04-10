@@ -111,7 +111,6 @@ void app_controller_activate(AppController *controller, GtkApplication *app)
     g_warning("Failed to load app config");
     return;
   }
-  app_controller_load_css(controller->state->config.css_file_path);
 
   controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
   if (!controller->state->layout_items)
@@ -137,6 +136,7 @@ void app_controller_activate(AppController *controller, GtkApplication *app)
   g_signal_connect(controller->state->window, "key-press-event", G_CALLBACK(on_key_press), controller);
 
   read_mode_enter(controller->read_mode);
+  app_controller_load_css(controller->state->config.css_file_path);
 
   gtk_widget_show_all(controller->state->window);
 }

@@ -22,14 +22,15 @@ static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpoint
 
   canvas = gtk_widget_get_parent(widget);
   item = ui_value_item_get_layout_item(widget);
+
   if (!canvas || !item)
     return FALSE;
   if (!ui_canvas_is_interactive(canvas))
     return FALSE;
 
   ui_canvas_set_selected_item(canvas, widget);
-  g_object_set_data(G_OBJECT(widget), "drag-start-x", GINT_TO_POINTER((int)event->x));
-  g_object_set_data(G_OBJECT(widget), "drag-start-y", GINT_TO_POINTER((int)event->y));
+  g_object_set_data(G_OBJECT(widget), "drag-start-root-x", GINT_TO_POINTER((int)event->x_root));
+  g_object_set_data(G_OBJECT(widget), "drag-start-root-y", GINT_TO_POINTER((int)event->y_root));
   g_object_set_data(G_OBJECT(widget), "origin-x", GINT_TO_POINTER((int)item->x));
   g_object_set_data(G_OBJECT(widget), "origin-y", GINT_TO_POINTER((int)item->y));
   g_object_set_data(G_OBJECT(widget), "origin-width", GINT_TO_POINTER((int)item->width));
@@ -57,7 +58,7 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
   gboolean dragging;
   gboolean resizing;
 
-  int start_x, start_y;
+  int start_root_x, start_root_y;
   int origin_x, origin_y;
   int origin_w, origin_h;
 
@@ -77,8 +78,8 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
   if (!dragging && !resizing)
     return FALSE;
 
-  start_x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "drag-start-x"));
-  start_y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "drag-start-y"));
+  start_root_x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "drag-start-root-x"));
+  start_root_y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "drag-start-root-y"));
 
   origin_x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "origin-x"));
   origin_y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "origin-y"));
@@ -86,14 +87,13 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
   origin_w = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "origin-width"));
   origin_h = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "origin-height"));
 
-  dx = (int)event->x - start_x;
-  dy = (int)event->y - start_y;
+  dx = ((int)event->x_root) - start_root_x;
+  dy = ((int)event->y_root) - start_root_y;
 
   if (dragging)
   {
     item->x = origin_x + dx;
     item->y = origin_y + dy;
-
     gtk_fixed_move(GTK_FIXED(canvas), widget, item->x, item->y);
   }
 
@@ -109,7 +109,6 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
 
     item->width = new_w;
     item->height = new_h;
-
     gtk_widget_set_size_request(widget, new_w, new_h);
   }
 
@@ -149,14 +148,13 @@ GtkWidget *ui_value_item_create(const LayoutItem *item)
   g_free(value_text);
 
   gtk_box_pack_start(GTK_BOX(box), label_value, FALSE, FALSE, 0);
-
   g_object_set_data(G_OBJECT(event_box), "value-label", label_value);
 
   // Event
-  gtk_widget_add_events(event_box, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK);
+  gtk_widget_add_events(event_box, GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK | GDK_BUTTON1_MOTION_MASK);
 
   g_signal_connect(event_box, "button-press-event", G_CALLBACK(on_button_press), NULL);
-  g_signal_connect(event_box, "motion_notify_event", G_CALLBACK(on_motion), NULL);
+  g_signal_connect(event_box, "motion-notify-event", G_CALLBACK(on_motion), NULL);
   g_signal_connect(event_box, "button-release-event", G_CALLBACK(on_button_release), NULL);
 
   g_object_set_data(G_OBJECT(event_box), "layout-item", (gpointer)item);
