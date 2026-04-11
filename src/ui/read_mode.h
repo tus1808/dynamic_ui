@@ -3,9 +3,8 @@
 
 typedef struct _AppController AppController;
 
-typedef struct
-{
-  AppController *controller;
+typedef struct {
+    AppController *controller;
 } ReadMode;
 
 ReadMode *read_mode_new(AppController *controller);

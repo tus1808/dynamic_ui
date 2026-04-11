@@ -2,5 +2,6 @@
   "window_title": "Dynamic UI",
   "background": "assets/background.png",
   "layout_file_path": "config/layout.json",
-  "css_file_path": "assets/app.css"
+  "css_file_path": "assets/app.css",
+  "editor_password": "123456"
 }

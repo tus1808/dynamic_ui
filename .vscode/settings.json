@@ -7,5 +7,42 @@
     "comments": false,
     "strings": false
   },
-  "editor.suggestOnTriggerCharacters": true
+  "editor.suggestOnTriggerCharacters": true,
+  "cSpell.enabledFileTypes": {
+    "c": true,
+    "cpp": true,
+    "json": true,
+    "markdown": true,
+    "plaintext": true,
+    "yaml": true
+  },
+  "cSpell.words": [
+    "gboolean",
+    "gchar",
+    "gint",
+    "guint",
+    "gpointer",
+    "gsize",
+    "gssize",
+    "gfloat",
+    "gdouble",
+    "xalign",
+    "yalign",
+    "halign",
+    "valign",
+    "hexpand",
+    "vexpand",
+    "pixbuf"
+  ],
+  "cSpell.ignorePaths": [
+    "build/**",
+    "subprojects/**",
+    "node_modules/**",
+    "*.png",
+    "*.jpg",
+    "*.jpeg",
+    "*.svg",
+    "*.pdf",
+    "*.drawio"
+  ]
 }

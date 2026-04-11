@@ -8,54 +8,45 @@
 #include "app/state.h"
 #include "ui/canvas.h"
 
-ReadMode *read_mode_new(AppController *controller)
-{
-  ReadMode *mode = g_new0(ReadMode, 1);
-  mode->controller = controller;
+ReadMode *read_mode_new(AppController *controller) {
+    ReadMode *mode = g_new0(ReadMode, 1);
+    mode->controller = controller;
 
-  return mode;
+    return mode;
 }
 
-void read_mode_free(ReadMode *mode)
-{
-  if (!mode)
-    return;
+void read_mode_free(ReadMode *mode) {
+    if (!mode)
+        return;
 
-  g_free(mode);
+    g_free(mode);
 }
 
-void read_mode_enter(ReadMode *mode)
-{
-  AppController *controller;
+void read_mode_enter(ReadMode *mode) {
+    AppController *controller;
 
-  if (!mode || !mode->controller)
-    return;
+    if (!mode || !mode->controller)
+        return;
 
-  controller = mode->controller;
+    controller = mode->controller;
 
-  if (!controller->state)
-    return;
+    if (!controller->state)
+        return;
 
-  controller->state->current_mode = APP_MODE_READ;
+    controller->state->current_mode = APP_MODE_READ;
 
-  if (controller->state->canvas)
-  {
-    ui_canvas_set_interactive(controller->state->canvas, FALSE);
-  }
-
-  if (controller->state->window)
-  {
-    GdkWindow *gdk_window = gtk_widget_get_window(controller->state->window);
-    if (gdk_window)
-    {
-      gdk_window_set_cursor(gdk_window, NULL);
+    if (controller->state->canvas) {
+        ui_canvas_set_interactive(controller->state->canvas, FALSE);
     }
-  }
 
-  g_print("[MODE] Enter READ mode\n");
+    if (controller->state->window) {
+        GdkWindow *gdk_window = gtk_widget_get_window(controller->state->window);
+        if (gdk_window) {
+            gdk_window_set_cursor(gdk_window, NULL);
+        }
+    }
+
+    g_print("[MODE] Enter READ mode\n");
 }
 
-void read_mode_exit(ReadMode *mode)
-{
-  (void)mode;
-}
+void read_mode_exit(ReadMode *mode) { (void)mode; }

@@ -5,16 +5,15 @@
 #include "common/types.h"
 #include "mode/manager.h"
 
-typedef struct
-{
-  GtkApplication *gtk_app;
-  GtkWidget *window;
-  GtkWidget *canvas;
+typedef struct {
+    GtkApplication *gtk_app;
+    GtkWidget *window;
+    GtkWidget *canvas;
 
-  AppConfig config;
-  GPtrArray *layout_items;
+    AppConfig config;
+    GPtrArray *layout_items;
 
-  AppMode current_mode;
+    AppMode current_mode;
 } AppState;
 
 AppState *app_state_new(void);

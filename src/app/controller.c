@@ -11,132 +11,119 @@
 
 #define CONFIG_FILE_PATH "config/app.json"
 
-static void app_controller_load_css(const char *file_path)
-{
-  GtkCssProvider *provider;
-  GdkScreen *screen;
-  GError *error = NULL;
+static void app_controller_load_css(const char *file_path) {
+    GtkCssProvider *provider;
+    GdkScreen *screen;
+    GError *error = NULL;
 
-  if (!file_path)
-    return;
+    if (!file_path)
+        return;
 
-  provider = gtk_css_provider_new();
-  screen = gdk_screen_get_default();
+    provider = gtk_css_provider_new();
+    screen = gdk_screen_get_default();
 
-  if (!gtk_css_provider_load_from_path(provider, file_path, &error))
-  {
-    g_warning("Failed to load CSS '%s': %s", file_path, error ? error->message : "unknown error");
-    g_clear_error(&error);
-    g_object_unref(provider);
+    if (!gtk_css_provider_load_from_path(provider, file_path, &error)) {
+        g_warning(
+            "Failed to load CSS '%s': %s",
+            file_path,
+            error ? error->message : "unknown error"
+        );
+        g_clear_error(&error);
+        g_object_unref(provider);
 
-    return;
-  }
-
-  g_print("[CSS] Loaded: %s\n", file_path);
-
-  gtk_style_context_add_provider_for_screen(screen, GTK_STYLE_PROVIDER(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-
-  g_object_unref(provider);
-}
-
-static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data)
-{
-  AppController *controller = user_data;
-
-  if (!controller || !controller->mode_manager)
-    return FALSE;
-
-  gboolean ctrl = (event->state & GDK_CONTROL_MASK);
-
-  if (event->keyval == GDK_KEY_Escape)
-  {
-    mode_manager_enter_read_mode(controller->mode_manager);
-    return TRUE;
-  }
-
-  if (ctrl && event->keyval == GDK_KEY_s)
-  {
-    if (controller->state->layout_items)
-    {
-      layout_store_save(controller->state->config.layout_file_path, controller->state->layout_items);
-      g_print("[LAYOUT] Saved\n");
+        return;
     }
 
-    return TRUE;
-  }
+    g_print("[CSS] Loaded: %s\n", file_path);
 
-  if (event->keyval == GDK_KEY_F12)
-  {
-    mode_manager_enter_editor_mode(controller->mode_manager);
+    gtk_style_context_add_provider_for_screen(
+        screen,
+        GTK_STYLE_PROVIDER(provider),
+        GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
 
-    return TRUE;
-  }
-
-  return FALSE;
+    g_object_unref(provider);
 }
 
-AppController *app_controller_new(void)
-{
-  AppController *controller = g_new0(AppController, 1);
+static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer user_data) {
+    AppController *controller = user_data;
 
-  controller->state = app_state_new();
-  controller->read_mode = read_mode_new(controller);
-  controller->editor_mode = editor_mode_new(controller);
-  controller->mode_manager = mode_manager_new(controller);
+    if (!controller || !controller->hotkey_manager)
+        return FALSE;
 
-  return controller;
+    return hotkey_manager_handle_key_press(controller->hotkey_manager, widget, event);
 }
 
-void app_controller_free(AppController *controller)
-{
-  if (!controller)
-    return;
+AppController *app_controller_new(void) {
+    AppController *controller = g_new0(AppController, 1);
 
-  mode_manager_free(controller->mode_manager);
-  read_mode_free(controller->read_mode);
-  editor_mode_free(controller->editor_mode);
-  app_state_free(controller->state);
+    controller->state = app_state_new();
+    controller->read_mode = read_mode_new(controller);
+    controller->editor_mode = editor_mode_new(controller);
+    controller->mode_manager = mode_manager_new(controller);
+    controller->auth_manager = auth_manager_new(controller);
+    controller->hotkey_manager = hotkey_manager_new(controller);
 
-  g_free(controller);
+    return controller;
 }
 
-void app_controller_activate(AppController *controller, GtkApplication *app)
-{
-  if (!controller || !controller->state)
-    return;
+void app_controller_free(AppController *controller) {
+    if (!controller)
+        return;
 
-  controller->state->gtk_app = app;
-  if (!config_loader_load_app_config(CONFIG_FILE_PATH, &controller->state->config))
-  {
-    g_warning("Failed to load app config");
-    return;
-  }
+    mode_manager_free(controller->mode_manager);
+    read_mode_free(controller->read_mode);
+    editor_mode_free(controller->editor_mode);
+    auth_manager_free(controller->auth_manager);
+    hotkey_manager_free(controller->hotkey_manager);
+    app_state_free(controller->state);
 
-  controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
-  if (!controller->state->layout_items)
-  {
-    g_warning("Failed to load layout items");
-    return;
-  }
+    g_free(controller);
+}
 
-  controller->state->canvas = ui_canvas_create();
-  if (!ui_canvas_set_background(controller->state->canvas, controller->state->config.background))
-  {
-    g_warning("Failed to load background: %s", controller->state->config.background);
-  }
-  ui_canvas_render_items(controller->state->canvas, controller->state->layout_items);
+void app_controller_activate(AppController *controller, GtkApplication *app) {
+    if (!controller || !controller->state)
+        return;
 
-  controller->state->window = ui_window_create(app, controller->state->canvas);
-  if (controller->state->config.window_title)
-  {
-    gtk_window_set_title(GTK_WINDOW(controller->state->window), controller->state->config.window_title);
-  }
-  gtk_widget_add_events(controller->state->window, GDK_KEY_PRESS_MASK);
+    controller->state->gtk_app = app;
+    if (!config_loader_load_app_config(CONFIG_FILE_PATH, &controller->state->config)) {
+        g_warning("Failed to load app config");
+        return;
+    }
 
-  g_signal_connect(controller->state->window, "key-press-event", G_CALLBACK(on_key_press), controller);
+    controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
+    if (!controller->state->layout_items) {
+        g_warning("Failed to load layout items");
+        return;
+    }
 
-  read_mode_enter(controller->read_mode);
-  app_controller_load_css(controller->state->config.css_file_path);
+    controller->state->canvas = ui_canvas_create();
+    if (!ui_canvas_set_background(
+            controller->state->canvas,
+            controller->state->config.background
+        )) {
+        g_warning("Failed to load background: %s", controller->state->config.background);
+    }
+    ui_canvas_render_items(controller->state->canvas, controller->state->layout_items);
 
-  gtk_widget_show_all(controller->state->window);
+    controller->state->window = ui_window_create(app, controller->state->canvas);
+    if (controller->state->config.window_title) {
+        gtk_window_set_title(
+            GTK_WINDOW(controller->state->window),
+            controller->state->config.window_title
+        );
+    }
+    gtk_widget_add_events(controller->state->window, GDK_KEY_PRESS_MASK);
+
+    g_signal_connect(
+        controller->state->window,
+        "key-press-event",
+        G_CALLBACK(on_key_press),
+        controller
+    );
+
+    read_mode_enter(controller->read_mode);
+    app_controller_load_css(controller->state->config.css_file_path);
+
+    gtk_widget_show_all(controller->state->window);
 }

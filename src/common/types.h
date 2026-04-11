@@ -3,22 +3,21 @@
 
 #include <glib.h>
 
-typedef struct
-{
-  gchar *window_title;
-  gchar *background;
-  gchar *layout_file_path;
-  gchar *css_file_path;
+typedef struct {
+    gchar *window_title;
+    gchar *background;
+    gchar *layout_file_path;
+    gchar *css_file_path;
+    gchar *editor_password;
 } AppConfig;
 
-typedef struct
-{
-  gchar *_id;
-  gint x;
-  gint y;
-  gint width;
-  gint height;
-  gchar *value;
+typedef struct {
+    gchar *_id;
+    gint x;
+    gint y;
+    gint width;
+    gint height;
+    gchar *value;
 } LayoutItem;
 
 #endif

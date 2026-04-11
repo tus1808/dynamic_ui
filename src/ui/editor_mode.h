@@ -3,9 +3,8 @@
 
 typedef struct _AppController AppController;
 
-typedef struct
-{
-  AppController *controller;
+typedef struct {
+    AppController *controller;
 } EditorMode;
 
 EditorMode *editor_mode_new(AppController *controller);

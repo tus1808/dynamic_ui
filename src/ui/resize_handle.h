@@ -7,13 +7,12 @@
 #define MIN_ITEM_WIDTH 60
 #define MIN_ITEM_HEIGHT 30
 
-typedef enum
-{
-  RESIZE_NONE = 0,
-  RESIZE_LEFT = 1 << 0,
-  RESIZE_RIGHT = 1 << 1,
-  RESIZE_TOP = 1 << 2,
-  RESIZE_BOTTOM = 1 << 3
+typedef enum {
+    RESIZE_NONE = 0,
+    RESIZE_LEFT = 1 << 0,
+    RESIZE_RIGHT = 1 << 1,
+    RESIZE_TOP = 1 << 2,
+    RESIZE_BOTTOM = 1 << 3
 } ResizeEdge;
 
 guint ui_resize_detect_resize_edges(GtkWidget *widget, gdouble x, gdouble y);

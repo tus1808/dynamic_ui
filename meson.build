@@ -22,6 +22,8 @@ app_sources = files(
   'src/app/state.c',
   'src/config/layout_store.c',
   'src/config/loader.c',
+  'src/input/auth_manager.c',
+  'src/input/hotkey_manager.c',
   'src/mode/manager.c',
   'src/ui/canvas.c',
   'src/ui/editor_mode.c',

@@ -5,16 +5,11 @@
 
 typedef struct _AppController AppController;
 
-typedef enum
-{
-  APP_MODE_READ = 0,
-  APP_MODE_EDITOR = 1
-} AppMode;
+typedef enum { APP_MODE_READ = 0, APP_MODE_EDITOR = 1 } AppMode;
 
-typedef struct
-{
-  AppController *controller;
-  AppMode current_mode;
+typedef struct {
+    AppController *controller;
+    AppMode current_mode;
 } ModeManager;
 
 ModeManager *mode_manager_new(AppController *controller);
