@@ -1,3 +1,4 @@
+/* Value Item */
 .event-box {
   border: 1px solid black;
 }
@@ -5,3 +6,32 @@
 .selected {
   border: 3px solid red;
 }
+
+/* Auth */
+/* #auth-dialog {
+  background: #1e2228;
+}
+
+#auth-box {
+  background: #2a2f36;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+#auth-entry {
+  background: #121417;
+  color: #ffffff;
+  border: 1px solid #444;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+#auth-entry:focus {
+  border-color: #66b3ff;
+}
+
+#auth-error {
+  color: #ff5555;
+  font-weight: bold;
+  min-height: 16px;
+} */

@@ -11,6 +11,39 @@ typedef struct {
     GtkWidget *error_label;
 } AuthDialogData;
 
+static gchar *compute_hash(const gchar *password) {
+    if (!password)
+        return NULL;
+
+    return g_compute_checksum_for_string(G_CHECKSUM_SHA256, password, -1);
+}
+
+gboolean auth_manager_check_password(AuthManager *manager, const gchar *password) {
+    const gchar *expected_hash;
+    gchar *actual_hash;
+    gboolean ok;
+
+    if (!manager || !manager->controller || !manager->controller->state)
+        return FALSE;
+
+    expected_hash = manager->controller->state->config.editor_password;
+
+    if (!expected_hash || expected_hash[0] == '\0')
+        return TRUE;
+
+    if (!password)
+        return FALSE;
+
+    actual_hash = compute_hash(password);
+    if (!actual_hash)
+        return FALSE;
+
+    ok = (g_strcmp0(expected_hash, actual_hash) == 0);
+
+    g_free(actual_hash);
+    return ok;
+}
+
 static void auth_dialog_submit(AuthDialogData *data) {
     const gchar *text;
 
@@ -63,23 +96,6 @@ void auth_manager_free(AuthManager *manager) {
     if (!manager)
         return;
     g_free(manager);
-}
-
-gboolean auth_manager_check_password(AuthManager *manager, const gchar *password) {
-    const gchar *expected;
-
-    if (!manager || !manager->controller || !manager->controller->state)
-        return FALSE;
-
-    expected = manager->controller->state->config.editor_password;
-
-    if (!expected || expected[0] == '\0')
-        return TRUE;
-
-    if (!password)
-        return FALSE;
-
-    return g_strcmp0(expected, password) == 0;
 }
 
 void auth_manager_request_editor_access(AuthManager *manager) {
@@ -138,6 +154,11 @@ void auth_manager_request_editor_access(AuthManager *manager) {
 
     g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), data);
     g_signal_connect(dialog, "destroy", G_CALLBACK(on_dialog_destroy), data);
+
+    gtk_widget_set_name(box, "auth-box");
+    gtk_widget_set_name(dialog, "auth-dialog");
+    gtk_widget_set_name(entry, "auth-entry");
+    gtk_widget_set_name(error_label, "auth-error-label");
 
     gtk_widget_show_all(dialog);
     gtk_widget_grab_focus(entry);
