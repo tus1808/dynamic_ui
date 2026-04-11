@@ -60,6 +60,7 @@ AppController *app_controller_new(void) {
     controller->state = app_state_new();
     controller->read_mode = read_mode_new(controller);
     controller->editor_mode = editor_mode_new(controller);
+    controller->editor_toolbar = NULL;
     controller->mode_manager = mode_manager_new(controller);
     controller->auth_manager = auth_manager_new(controller);
     controller->hotkey_manager = hotkey_manager_new(controller);
@@ -74,6 +75,7 @@ void app_controller_free(AppController *controller) {
     mode_manager_free(controller->mode_manager);
     read_mode_free(controller->read_mode);
     editor_mode_free(controller->editor_mode);
+    editor_toolbar_free(controller->editor_toolbar);
     auth_manager_free(controller->auth_manager);
     hotkey_manager_free(controller->hotkey_manager);
     app_state_free(controller->state);
@@ -91,18 +93,18 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
         return;
     }
 
-    controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
-    if (!controller->state->layout_items) {
-        g_warning("Failed to load layout items");
-        return;
-    }
-
     controller->state->canvas = ui_canvas_create();
     if (!ui_canvas_set_background(
             controller->state->canvas,
             controller->state->config.background
         )) {
         g_warning("Failed to load background: %s", controller->state->config.background);
+    }
+
+    controller->state->layout_items = layout_store_load(controller->state->config.layout_file_path);
+    if (!controller->state->layout_items) {
+        g_warning("Failed to load layout items");
+        return;
     }
     ui_canvas_render_items(controller->state->canvas, controller->state->layout_items);
 
@@ -122,8 +124,12 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
         controller
     );
 
-    read_mode_enter(controller->read_mode);
+    controller->editor_toolbar = editor_toolbar_new(controller);
+    GtkWidget *toolbar_container = editor_toolbar_get_widget(controller->editor_toolbar);
+    gtk_fixed_put(GTK_FIXED(controller->state->canvas), toolbar_container, 800, 12);
+
     app_controller_load_css(controller->state->config.css_file_path);
 
     gtk_widget_show_all(controller->state->window);
+    mode_manager_enter_read_mode(controller->mode_manager);
 }

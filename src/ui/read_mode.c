@@ -23,24 +23,20 @@ void read_mode_free(ReadMode *mode) {
 }
 
 void read_mode_enter(ReadMode *mode) {
-    AppController *controller;
-
     if (!mode || !mode->controller)
         return;
 
-    controller = mode->controller;
-
-    if (!controller->state)
+    if (!mode->controller->state)
         return;
 
-    controller->state->current_mode = APP_MODE_READ;
+    mode->controller->state->current_mode = APP_MODE_READ;
 
-    if (controller->state->canvas) {
-        ui_canvas_set_interactive(controller->state->canvas, FALSE);
+    if (mode->controller->state->canvas) {
+        ui_canvas_set_interactive(mode->controller->state->canvas, FALSE);
     }
 
-    if (controller->state->window) {
-        GdkWindow *gdk_window = gtk_widget_get_window(controller->state->window);
+    if (mode->controller->state->window) {
+        GdkWindow *gdk_window = gtk_widget_get_window(mode->controller->state->window);
         if (gdk_window) {
             gdk_window_set_cursor(gdk_window, NULL);
         }

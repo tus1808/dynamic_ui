@@ -10,12 +10,14 @@
 #include "input/hotkey_manager.h"
 #include "ui/read_mode.h"
 #include "ui/editor_mode.h"
+#include "ui/editor_toolbar.h"
 
 typedef struct _AppController {
     AppState *state;
     ModeManager *mode_manager;
     ReadMode *read_mode;
     EditorMode *editor_mode;
+    EditorToolbar *editor_toolbar;
     AuthManager *auth_manager;
     HotkeyManager *hotkey_manager;
 } AppController;

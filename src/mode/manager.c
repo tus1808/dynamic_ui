@@ -3,6 +3,7 @@
 #include <glib.h>
 
 #include "app/controller.h"
+#include "ui/editor_toolbar.h"
 #include "ui/read_mode.h"
 
 ModeManager *mode_manager_new(AppController *controller) {
@@ -81,10 +82,10 @@ void mode_manager_set_mode(ModeManager *manager, AppMode mode) {
 
 void mode_manager_enter_read_mode(ModeManager *manager) {
     mode_manager_set_mode(manager, APP_MODE_READ);
+    editor_toolbar_hide(manager->controller->editor_toolbar);
 }
 
 void mode_manager_enter_editor_mode(ModeManager *manager) {
-    g_print("B");
     mode_manager_set_mode(manager, APP_MODE_EDITOR);
-    g_print("A");
+    editor_toolbar_show(manager->controller->editor_toolbar);
 }

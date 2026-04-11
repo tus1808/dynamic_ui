@@ -10,4 +10,4 @@ GtkWidget *ui_window_create(GtkApplication *app, GtkWidget *child) {
     }
 
     return window;
-}
+}   

@@ -124,12 +124,15 @@ void auth_manager_request_editor_access(AuthManager *manager) {
     );
 
     gtk_window_set_resizable(GTK_WINDOW(dialog), FALSE);
+    gtk_window_set_default_size(GTK_WINDOW(dialog), 420, 220);
     gtk_dialog_set_default_response(GTK_DIALOG(dialog), GTK_RESPONSE_OK);
 
     content_area = gtk_dialog_get_content_area(GTK_DIALOG(dialog));
 
     box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 8);
     gtk_container_set_border_width(GTK_CONTAINER(box), 12);
+    gtk_widget_set_name(box, "auth-box");
+    gtk_widget_set_size_request(box, 380, 140);
 
     label = gtk_label_new("Enter password:");
     gtk_label_set_xalign(GTK_LABEL(label), 0.0f);
@@ -154,8 +157,6 @@ void auth_manager_request_editor_access(AuthManager *manager) {
 
     g_signal_connect(dialog, "response", G_CALLBACK(on_dialog_response), data);
     g_signal_connect(dialog, "destroy", G_CALLBACK(on_dialog_destroy), data);
-
-    gtk_widget_set_name(box, "auth-box");
     gtk_widget_set_name(dialog, "auth-dialog");
     gtk_widget_set_name(entry, "auth-entry");
     gtk_widget_set_name(error_label, "auth-error-label");

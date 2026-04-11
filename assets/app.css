@@ -35,3 +35,22 @@
   font-weight: bold;
   min-height: 16px;
 } */
+
+/* Toolbar */
+#editor-toolbar {
+  background: #2a2f36;
+  border-radius: 6px;
+  padding: 4px;
+}
+
+#editor-toolbar-btn {
+  min-width: 30px;
+  min-height: 28px;
+  background: #444;
+  color: white;
+  border-radius: 4px;
+}
+
+#editor-toolbar-btn:hover {
+  background: #555;
+}

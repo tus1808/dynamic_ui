@@ -27,6 +27,7 @@ app_sources = files(
   'src/mode/manager.c',
   'src/ui/canvas.c',
   'src/ui/editor_mode.c',
+  'src/ui/editor_toolbar.c',
   'src/ui/read_mode.c',
   'src/ui/resize_handle.c',
   'src/ui/value_item.c',

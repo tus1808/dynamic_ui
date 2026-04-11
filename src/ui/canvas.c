@@ -1,12 +1,12 @@
 #include "ui/canvas.h"
 
 GtkWidget *ui_canvas_create(void) {
-    GtkWidget *fixed = gtk_fixed_new();
-    gtk_widget_set_hexpand(fixed, TRUE);
-    gtk_widget_set_vexpand(fixed, TRUE);
-    g_object_set_data(G_OBJECT(fixed), "canvas-interactive", GINT_TO_POINTER(FALSE));
+    GtkWidget *canvas = gtk_fixed_new();
+    gtk_widget_set_hexpand(canvas, TRUE);
+    gtk_widget_set_vexpand(canvas, TRUE);
+    g_object_set_data(G_OBJECT(canvas), "canvas-interactive", GINT_TO_POINTER(FALSE));
 
-    return fixed;
+    return canvas;
 }
 
 gboolean ui_canvas_set_background(GtkWidget *canvas, const char *image_path) {
