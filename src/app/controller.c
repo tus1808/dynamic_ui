@@ -1,15 +1,13 @@
 #include "app/controller.h"
 
 #include <glib.h>
-#include <gdk/gdk.h>
-#include <gtk/gtk.h>
 
 #include "config/layout_store.h"
 #include "config/loader.h"
+#include "mode/manager.h"
 #include "ui/canvas.h"
+#include "ui/overlay.h"
 #include "ui/window.h"
-
-#define CONFIG_FILE_PATH "config/app.json"
 
 static void app_controller_load_css(const char *file_path) {
     GtkCssProvider *provider;
@@ -94,8 +92,18 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
     }
 
     controller->state->canvas = ui_canvas_create();
-    if (!ui_canvas_set_background(
-            controller->state->canvas,
+    if (!controller->state->canvas) {
+        g_warning("Failed to create canvas");
+        return;
+    }
+
+    controller->state->overlay = ui_overlay_create(controller->state->canvas);
+    if (!controller->state->overlay) {
+        g_warning("Failed to create overlay");
+        return;
+    }
+    if (!ui_overlay_set_background(
+            controller->state->overlay,
             controller->state->config.background
         )) {
         g_warning("Failed to load background: %s", controller->state->config.background);
@@ -106,9 +114,13 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
         g_warning("Failed to load layout items");
         return;
     }
-    ui_canvas_render_items(controller->state->canvas, controller->state->layout_items);
+    ui_canvas_render_items(
+        controller->state->canvas,
+        controller->state->layout_items,
+        controller->state->value_items
+    );
 
-    controller->state->window = ui_window_create(app, controller->state->canvas);
+    controller->state->window = ui_window_create(app, controller->state->overlay);
     if (controller->state->config.window_title) {
         gtk_window_set_title(
             GTK_WINDOW(controller->state->window),
@@ -126,7 +138,7 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
 
     controller->editor_toolbar = editor_toolbar_new(controller);
     GtkWidget *toolbar_container = editor_toolbar_get_widget(controller->editor_toolbar);
-    gtk_fixed_put(GTK_FIXED(controller->state->canvas), toolbar_container, 800, 12);
+    ui_overlay_set_toolbar(controller->state->overlay, toolbar_container);
 
     app_controller_load_css(controller->state->config.css_file_path);
 

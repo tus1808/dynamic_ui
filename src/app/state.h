@@ -5,14 +5,16 @@
 #include "common/types.h"
 #include "mode/manager.h"
 
+#define CONFIG_FILE_PATH "config/app.json"
+
 typedef struct {
     GtkApplication *gtk_app;
     GtkWidget *window;
+    GtkWidget *overlay;
     GtkWidget *canvas;
-
     AppConfig config;
     GPtrArray *layout_items;
-
+    GPtrArray *value_items;
     AppMode current_mode;
 } AppState;
 

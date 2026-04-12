@@ -65,6 +65,65 @@ gboolean config_loader_load_app_config(const char *file_path, AppConfig *app_con
     return TRUE;
 }
 
+gboolean config_loader_save_app_config(const char *file_path, const AppConfig *app_config) {
+    JsonBuilder *builder = NULL;
+    JsonGenerator *generator = NULL;
+    JsonNode *root = NULL;
+    GError *error = NULL;
+    gboolean ok = FALSE;
+
+    if (!file_path || !app_config)
+        return FALSE;
+
+    builder = json_builder_new();
+
+    json_builder_begin_object(builder);
+    if (app_config->window_title) {
+        json_builder_set_member_name(builder, "window_title");
+        json_builder_add_string_value(builder, app_config->window_title);
+    }
+    if (app_config->background) {
+        json_builder_set_member_name(builder, "background");
+        json_builder_add_string_value(builder, app_config->background);
+    }
+    if (app_config->layout_file_path) {
+        json_builder_set_member_name(builder, "layout_file_path");
+        json_builder_add_string_value(builder, app_config->layout_file_path);
+    }
+    if (app_config->css_file_path) {
+        json_builder_set_member_name(builder, "css_file_path");
+        json_builder_add_string_value(builder, app_config->css_file_path);
+    }
+    if (app_config->editor_password) {
+        json_builder_set_member_name(builder, "editor_password");
+        json_builder_add_string_value(builder, app_config->editor_password);
+    }
+    json_builder_end_object(builder);
+
+    root = json_builder_get_root(builder);
+
+    generator = json_generator_new();
+    json_generator_set_root(generator, root);
+    json_generator_set_pretty(generator, TRUE);
+
+    if (!json_generator_to_file(generator, file_path, &error)) {
+        g_warning(
+            "Cannot save config '%s': %s",
+            file_path,
+            error ? error->message : "unknown error"
+        );
+        g_clear_error(&error);
+        ok = FALSE;
+    } else {
+        ok = TRUE;
+    }
+    json_node_free(root);
+    g_object_unref(generator);
+    g_object_unref(builder);
+
+    return ok;
+}
+
 void config_loader_free_app_config(AppConfig *config) {
     if (!config)
         return;

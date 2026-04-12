@@ -5,10 +5,11 @@
 #include "ui/canvas.h"
 #include "ui/resize_handle.h"
 
-static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer *user_data) {
+static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     GtkWidget *canvas;
     LayoutItem *item;
     guint resize_edges;
+    GPtrArray *selected_items;
 
     if (event->button != 1)
         return FALSE;
@@ -18,10 +19,40 @@ static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpoint
 
     if (!canvas || !item)
         return FALSE;
+
     if (!ui_canvas_is_interactive(canvas))
         return FALSE;
 
-    ui_canvas_set_selected_item(canvas, widget);
+    if (event->state & GDK_CONTROL_MASK) {
+        ui_canvas_toggle_item_selection(canvas, widget);
+    } else {
+        if (!ui_canvas_is_item_selected(canvas, widget))
+            ui_canvas_select_only(canvas, widget);
+    }
+
+    selected_items = ui_canvas_get_selected_items(canvas);
+
+    if (selected_items && ui_canvas_is_item_selected(canvas, widget)) {
+        for (guint i = 0; i < selected_items->len; i++) {
+            GtkWidget *selected_widget = g_ptr_array_index(selected_items, i);
+            LayoutItem *selected_item = ui_value_item_get_layout_item(selected_widget);
+
+            if (!selected_item)
+                continue;
+
+            g_object_set_data(
+                G_OBJECT(selected_widget),
+                "origin-x",
+                GINT_TO_POINTER(selected_item->x)
+            );
+            g_object_set_data(
+                G_OBJECT(selected_widget),
+                "origin-y",
+                GINT_TO_POINTER(selected_item->y)
+            );
+        }
+    }
+
     g_object_set_data(G_OBJECT(widget), "drag-start-root-x", GINT_TO_POINTER((int)event->x_root));
     g_object_set_data(G_OBJECT(widget), "drag-start-root-y", GINT_TO_POINTER((int)event->y_root));
     g_object_set_data(G_OBJECT(widget), "origin-x", GINT_TO_POINTER((int)item->x));
@@ -82,9 +113,40 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
     dy = ((int)event->y_root) - start_root_y;
 
     if (dragging) {
+        GPtrArray *selected_items = ui_canvas_get_selected_items(canvas);
+
+        if (selected_items && selected_items->len > 1 &&
+            ui_canvas_is_item_selected(canvas, widget)) {
+            for (guint i = 0; i < selected_items->len; i++) {
+                GtkWidget *selected_widget = g_ptr_array_index(selected_items, i);
+                LayoutItem *selected_item = ui_value_item_get_layout_item(selected_widget);
+
+                if (!selected_item)
+                    continue;
+
+                int base_x =
+                    GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selected_widget), "origin-x"));
+                int base_y =
+                    GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selected_widget), "origin-y"));
+
+                selected_item->x = base_x + dx;
+                selected_item->y = base_y + dy;
+
+                gtk_fixed_move(
+                    GTK_FIXED(canvas),
+                    selected_widget,
+                    selected_item->x,
+                    selected_item->y
+                );
+            }
+
+            return TRUE;
+        }
+
         item->x = origin_x + dx;
         item->y = origin_y + dy;
         gtk_fixed_move(GTK_FIXED(canvas), widget, item->x, item->y);
+
         return TRUE;
     }
 
@@ -227,8 +289,10 @@ void ui_value_item_set_value(GtkWidget *widget, const char *value) {
 
 void ui_value_item_set_selected(GtkWidget *widget, gboolean selected) {
     GtkStyleContext *context;
+
     if (!widget)
         return;
+
     context = gtk_widget_get_style_context(widget);
     g_object_set_data(G_OBJECT(widget), "selected", GINT_TO_POINTER(selected ? 1 : 0));
 
@@ -247,8 +311,10 @@ gboolean ui_value_item_is_selected(GtkWidget *widget) {
 
 void ui_value_item_set_editable(GtkWidget *widget, gboolean editable) {
     GtkStyleContext *context;
+
     if (!widget)
         return;
+
     context = gtk_widget_get_style_context(widget);
     g_object_set_data(G_OBJECT(widget), "editable", GINT_TO_POINTER(editable ? 1 : 0));
 
