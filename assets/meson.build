@@ -5,6 +5,12 @@ configure_file(
 )
 
 configure_file(
+  input: 'background.gif',
+  output: 'background.gif',
+  copy: true,
+)
+
+configure_file(
   input: 'app.css',
   output: 'app.css',
   copy: true,

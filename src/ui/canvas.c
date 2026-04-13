@@ -17,86 +17,6 @@ static GPtrArray *ui_canvas_ensure_selected_items(GtkWidget *canvas) {
     return selected_items;
 }
 
-static gboolean rect_contains_item(GdkRectangle *r, LayoutItem *item) {
-    if (!r || !item)
-        return FALSE;
-
-    return !(
-        item->x + item->width < r->x || item->x > r->x + r->width ||
-        item->y + item->height < r->y || item->y > r->y + r->height
-    );
-};
-
-static gboolean
-on_canvas_button_press(GtkWidget *canvas, GdkEventButton *event, gpointer user_data) {
-    if (!ui_canvas_is_interactive(canvas))
-        return FALSE;
-
-    if (event->button != 1)
-        return FALSE;
-
-    g_object_set_data(G_OBJECT(canvas), "selection-rect-active", GINT_TO_POINTER(1));
-    g_object_set_data(G_OBJECT(canvas), "selection-start-x", GINT_TO_POINTER((int)event->x));
-    g_object_set_data(G_OBJECT(canvas), "selection-start-y", GINT_TO_POINTER((int)event->y));
-
-    if (!(event->state & GDK_CONTROL_MASK))
-        ui_canvas_clear_selection(canvas);
-
-    return FALSE;
-};
-
-static gboolean on_canvas_motion(GtkWidget *canvas, GdkEventMotion *event, gpointer user_data) {
-    gint start_x, start_y;
-    gint x1, y1, x2, y2;
-    GdkRectangle rect;
-    GList *children, *iter;
-
-    if (!ui_canvas_is_interactive(canvas))
-        return FALSE;
-
-    if (!GPOINTER_TO_INT(g_object_get_data(G_OBJECT(canvas), "selection-rect-active")))
-        return FALSE;
-
-    start_x = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(canvas), "selection-start-x"));
-    start_y = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(canvas), "selection-start-y"));
-
-    x1 = MIN(start_x, (gint)event->x);
-    y1 = MIN(start_y, (gint)event->y);
-    x2 = MAX(start_x, (gint)event->x);
-    y2 = MAX(start_y, (gint)event->y);
-
-    rect.x = x1;
-    rect.y = y1;
-    rect.width = x2 - x1;
-    rect.height = y2 - y1;
-
-    ui_canvas_clear_selection(canvas);
-
-    children = gtk_container_get_children(GTK_CONTAINER(canvas));
-    for (iter = children; iter != NULL; iter = iter->next) {
-        GtkWidget *child = GTK_WIDGET(iter->data);
-        LayoutItem *item = ui_value_item_get_layout_item(child);
-
-        if (!item)
-            continue;
-
-        if (rect_contains_item(&rect, item))
-            ui_canvas_toggle_item_selection(canvas, child);
-    }
-    g_list_free(children);
-
-    return TRUE;
-};
-
-static gboolean
-on_canvas_button_release(GtkWidget *canvas, GdkEventButton *event, gpointer user_data) {
-    if (event->button != 1)
-        return FALSE;
-    g_object_set_data(G_OBJECT(canvas), "selection-rect-active", GINT_TO_POINTER(0));
-
-    return FALSE;
-}
-
 GtkWidget *ui_canvas_create(void) {
     GtkWidget *canvas = gtk_fixed_new();
 
@@ -109,11 +29,6 @@ GtkWidget *ui_canvas_create(void) {
     );
 
     g_object_set_data(G_OBJECT(canvas), "canvas-interactive", GINT_TO_POINTER(FALSE));
-    g_object_set_data(G_OBJECT(canvas), "selection-rect-active", GINT_TO_POINTER(FALSE));
-
-    g_signal_connect(canvas, "button-press-event", G_CALLBACK(on_canvas_button_press), NULL);
-    g_signal_connect(canvas, "motion-notify-event", G_CALLBACK(on_canvas_motion), NULL);
-    g_signal_connect(canvas, "button-release-event", G_CALLBACK(on_canvas_button_release), NULL);
 
     return canvas;
 }

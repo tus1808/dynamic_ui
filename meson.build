@@ -49,6 +49,7 @@ dynamic_ui = executable(
 install_data(
   [
     'assets/background.png',
+    'assets/background.gif',
     'assets/app.css',
   ],
   install_dir: join_paths(get_option('datadir'), meson.project_name(), 'assets'),

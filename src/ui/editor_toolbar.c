@@ -9,9 +9,7 @@ static void on_add_one_clicked(GtkButton *button, gpointer user_data) {
     if (!toolbar || !toolbar->controller)
         return;
     g_print("[EDITOR] Add one item\n");
-    /*TODO:
-        editor_mode_add_one_item(toolbar->controller->editor_mode);
-    */
+    editor_mode_add_one_item(toolbar->controller->editor_mode);
 }
 
 static void on_add_many_clicked(GtkButton *button, gpointer user_data) {
@@ -22,9 +20,7 @@ static void on_add_many_clicked(GtkButton *button, gpointer user_data) {
         return;
 
     g_print("[EDITOR] Add many items\n");
-    /*TODO:
-        editor_mode_add_many_item(toolbar->controller->editor_mode);
-    */
+    editor_mode_add_many_items(toolbar->controller->editor_mode);
 }
 
 static void on_delete_clicked(GtkButton *button, gpointer user_data) {
@@ -35,10 +31,7 @@ static void on_delete_clicked(GtkButton *button, gpointer user_data) {
         return;
 
     g_print("[EDITOR] Delete selected item\n");
-
-    /*TODO:
-        editor_mode_delete_selected_item(toolbar->controller->editor_mode);
-    */
+    editor_mode_delete_selected_item(toolbar->controller->editor_mode);
 }
 
 static void on_change_background_clicked(GtkButton *button, gpointer user_data) {
@@ -49,9 +42,7 @@ static void on_change_background_clicked(GtkButton *button, gpointer user_data) 
         return;
 
     g_print("[EDITOR] Change Background");
-    /*TODO:
-        editor_mode_add_change_background(toolbar->controller->editor_mode);
-    */
+    editor_mode_change_background(toolbar->controller->editor_mode);
 }
 
 EditorToolbar *editor_toolbar_new(AppController *controller) {
