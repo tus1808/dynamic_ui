@@ -10,10 +10,11 @@ AppState *app_state_new(void) {
     state->gtk_app = NULL;
     state->window = NULL;
     state->overlay = NULL;
-    state->canvas =NULL;
+    state->canvas = NULL;
     state->layout_items = g_ptr_array_new();
     state->value_items = g_ptr_array_new();
     state->current_mode = APP_MODE_READ;
+    state->uart_port = NULL;
 
     return state;
 }
@@ -21,6 +22,12 @@ AppState *app_state_new(void) {
 void app_state_free(AppState *state) {
     if (!state)
         return;
+
+    if (state->uart_port) {
+        uart_port_stop(state->uart_port);
+        uart_port_free(state->uart_port);
+        state->uart_port = NULL;
+    }
 
     if (state->layout_items) {
         g_ptr_array_free(state->layout_items, TRUE);

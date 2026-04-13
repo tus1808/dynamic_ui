@@ -32,7 +32,9 @@
     "valign",
     "hexpand",
     "vexpand",
-    "pixbuf"
+    "pixbuf",
+    "uart",
+    "crtscts"
   ],
   "cSpell.ignorePaths": [
     "build/**",

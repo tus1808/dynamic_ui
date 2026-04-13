@@ -5,6 +5,7 @@
 #include "config/layout_store.h"
 #include "config/loader.h"
 #include "mode/manager.h"
+#include "uart/port.h"
 #include "ui/canvas.h"
 #include "ui/overlay.h"
 #include "ui/window.h"
@@ -50,6 +51,56 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
         return FALSE;
 
     return hotkey_manager_handle_key_press(controller->hotkey_manager, widget, event);
+}
+
+static void on_uart_frame(const guint8 *frame, gsize frame_size, gpointer user_data) {
+    (void)user_data;
+
+    g_print("UART frame received: %zu bytes\n", frame_size);
+
+    for (gsize i = 0; i < frame_size; i++) {
+        g_print("%02X ", frame[i]);
+    }
+    g_print("\n");
+}
+
+void app_uart_init(AppController *controller) {
+    AppState *state;
+
+    if (!controller || !controller->state)
+        return;
+
+    state = controller->state;
+
+    if (state->uart_port) {
+        uart_port_stop(state->uart_port);
+        uart_port_free(state->uart_port);
+        state->uart_port = NULL;
+    }
+
+    state->uart_port = uart_port_new(9600, on_uart_frame, controller);
+    if (!state->uart_port) {
+        g_printerr("Failed to create UART port object.\n");
+        return;
+    }
+
+    if (!uart_port_find_working_device(state->uart_port)) {
+        g_printerr("No active UART port found.\n");
+        uart_port_free(state->uart_port);
+        state->uart_port = NULL;
+
+        return;
+    }
+
+    g_print("Using UART port: %s\n", uart_port_get_device_path(state->uart_port));
+
+    if (!uart_port_start(state->uart_port)) {
+        g_printerr("Failed to start UART read thread.\n");
+        uart_port_free(state->uart_port);
+        state->uart_port = NULL;
+
+        return;
+    }
 }
 
 AppController *app_controller_new(void) {
@@ -144,4 +195,6 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
 
     gtk_widget_show_all(controller->state->window);
     mode_manager_enter_read_mode(controller->mode_manager);
+
+    app_uart_init(controller);
 }

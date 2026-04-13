@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 #include "common/types.h"
 #include "mode/manager.h"
+#include "uart/port.h"
 
 #define CONFIG_FILE_PATH "config/app.json"
 
@@ -16,6 +17,7 @@ typedef struct {
     GPtrArray *layout_items;
     GPtrArray *value_items;
     AppMode current_mode;
+    UartPort *uart_port;
 } AppState;
 
 AppState *app_state_new(void);
