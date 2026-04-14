@@ -50,7 +50,7 @@ data_dispatcher_update_ui(DataDispatcher *dispatcher, const guint8 *frame, gsize
     guint visible_count;
     guint i;
 
-    if (!dispatcher || !dispatcher->state || frame)
+    if (!dispatcher || !dispatcher->state || !frame)
         return;
 
     state = dispatcher->state;
@@ -116,7 +116,7 @@ void data_dispatcher_submit_frame(
 ) {
     DispatchJob *job;
 
-    if (!dispatcher || !frame || !frame_size == 0)
+    if (!dispatcher || !frame || frame_size == 0)
         return;
 
     if (frame_size > UART_FRAME_SIZE)
