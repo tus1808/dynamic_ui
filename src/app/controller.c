@@ -82,8 +82,16 @@ void app_uart_init(AppController *controller) {
         return;
     }
 
-    if (!uart_port_find_working_device(state->uart_port)) {
-        g_printerr("No active UART port found.\n");
+    // if (!uart_port_find_working_device(state->uart_port)) {
+    //     g_printerr("No active UART port found.\n");
+    //     uart_port_free(state->uart_port);
+    //     state->uart_port = NULL;
+
+    //     return;
+    // }
+
+    if (!uart_port_open(state->uart_port, "/dev/ttyS1")) {
+        g_printerr("Failed to open /dev/ttyS1\n");
         uart_port_free(state->uart_port);
         state->uart_port = NULL;
 
