@@ -16,6 +16,8 @@ AppState *app_state_new(void) {
     state->current_mode = APP_MODE_READ;
     state->uart_port = NULL;
 
+    
+
     return state;
 }
 

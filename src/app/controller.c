@@ -54,14 +54,12 @@ static gboolean on_key_press(GtkWidget *widget, GdkEventKey *event, gpointer use
 }
 
 static void on_uart_frame(const guint8 *frame, gsize frame_size, gpointer user_data) {
-    (void)user_data;
+    AppController *controller = user_data;
 
-    g_print("UART frame received: %zu bytes\n", frame_size);
+    if (!controller || !controller->data_dispatcher)
+        return;
 
-    for (gsize i = 0; i < frame_size; i++) {
-        g_print("%02X ", frame[i]);
-    }
-    g_print("\n");
+    data_dispatcher_submit_frame(controller->data_dispatcher, frame, frame_size);
 }
 
 void app_uart_init(AppController *controller) {
@@ -113,6 +111,7 @@ AppController *app_controller_new(void) {
     controller->mode_manager = mode_manager_new(controller);
     controller->auth_manager = auth_manager_new(controller);
     controller->hotkey_manager = hotkey_manager_new(controller);
+    controller->data_dispatcher = data_dispatcher_new(controller->state);
 
     return controller;
 }
@@ -127,6 +126,7 @@ void app_controller_free(AppController *controller) {
     editor_toolbar_free(controller->editor_toolbar);
     auth_manager_free(controller->auth_manager);
     hotkey_manager_free(controller->hotkey_manager);
+    data_dispatcher_free(controller->data_dispatcher);
     app_state_free(controller->state);
 
     g_free(controller);
