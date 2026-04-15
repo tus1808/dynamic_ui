@@ -116,7 +116,7 @@ void data_dispatcher_submit_frame(
 ) {
     DispatchJob *job;
 
-    if (!dispatcher || !frame || frame_size == 0)
+    if (!dispatcher || !dispatcher->state || !frame || frame_size == 0)
         return;
 
     if (frame_size > UART_FRAME_SIZE)

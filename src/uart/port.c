@@ -139,10 +139,47 @@ static gboolean uart_port_wait_for_signal(int fd, int timeout_ms) {
     return TRUE;
 }
 
+// static gpointer uart_port_read_thread(gpointer data) {
+//     UartPort *port = data;
+//     guint8 frame[UART_FRAME_SIZE];
+//     gsize filled = 0;
+
+//     while (port && port->running) {
+//         ssize_t n;
+
+//         if (port->fd < 0)
+//             break;
+
+//         n = read(port->fd, frame + filled, UART_FRAME_SIZE - filled);
+
+//         if (n > 0) {
+//             filled += (gsize)n;
+
+//             if (filled == UART_FRAME_SIZE) {
+//                 if (port->callback)
+//                     port->callback(frame, UART_FRAME_SIZE, port->user_data);
+
+//                 filled = 0;
+//             }
+
+//             continue;
+//         }
+
+//         if (n == 0) {
+//             g_usleep(2000);
+//             continue;
+//         }
+
+//         break;
+//     }
+
+//     port->running = FALSE;
+//     return NULL;
+// }
+
 static gpointer uart_port_read_thread(gpointer data) {
     UartPort *port = data;
-    guint8 frame[UART_FRAME_SIZE];
-    gsize filled = 0;
+    guint8 buffer[256];
 
     while (port && port->running) {
         ssize_t n;
@@ -150,22 +187,26 @@ static gpointer uart_port_read_thread(gpointer data) {
         if (port->fd < 0)
             break;
 
-        n = read(port->fd, frame + filled, UART_FRAME_SIZE - filled);
+        n = read(port->fd, buffer, sizeof(buffer));
 
         if (n > 0) {
-            filled += (gsize)n;
+            g_print("[UART RX] %zd bytes: ", n);
+            for (ssize_t i = 0; i < n; i++)
+                g_print("%02X ", buffer[i]);
+            g_print("\n");
 
-            if (filled == UART_FRAME_SIZE) {
-                if (port->callback)
-                    port->callback(frame, UART_FRAME_SIZE, port->user_data);
-
-                filled = 0;
-            }
+            if (port->callback)
+                port->callback(buffer, (gsize)n, port->user_data);
 
             continue;
         }
 
         if (n == 0) {
+            g_usleep(2000);
+            continue;
+        }
+
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
             g_usleep(2000);
             continue;
         }
