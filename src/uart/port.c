@@ -1,12 +1,11 @@
 #include "uart/port.h"
 
-#include <glib.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <glib.h>
 #include <string.h>
 #include <termios.h>
-#include <poll.h>
+#include <unistd.h>
 
 struct _UartPort {
     gchar *device_path;
@@ -17,26 +16,6 @@ struct _UartPort {
 
     UartFrameCallback callback;
     gpointer user_data;
-};
-
-static const gchar *UART_CANDIDATE_PORTS[] = {
-    "/dev/ttyS0",
-    "/dev/ttyS1",
-    "/dev/ttyS2",
-    "/dev/ttyS3",
-    "/dev/ttyS4",
-    "/dev/ttyS5",
-    "/dev/ttyS6",
-    "/dev/ttyS7",
-    "/dev/ttyUSB0",
-    "/dev/ttyUSB1",
-    "/dev/ttyUSB2",
-    "/dev/ttyUSB3",
-    "/dev/ttyACM0",
-    "/dev/ttyACM1",
-    "/dev/ttyACM2",
-    "/dev/ttyACM3",
-    NULL
 };
 
 static speed_t uart_port_map_baudrate(int baudrate) {
@@ -76,7 +55,9 @@ static gboolean uart_port_configure(int fd, int baudrate) {
     tty.c_cflag |= CLOCAL | CREAD;
     tty.c_cflag &= ~(PARENB | PARODD);
     tty.c_cflag &= ~CSTOPB;
-    // tty.c_cflag &= ~CRTSCTS;
+#ifdef CRTSCTS
+    tty.c_cflag &= ~CRTSCTS;
+#endif
 
     tty.c_iflag = 0;
     tty.c_oflag = 0;
@@ -112,74 +93,10 @@ static int uart_port_open_fd(const gchar *device_path, int baudrate) {
     return fd;
 }
 
-static gboolean uart_port_wait_for_signal(int fd, int timeout_ms) {
-    struct pollfd pfd;
-    guint8 probe[8];
-    int poll_result;
-    ssize_t bytes_read;
-
-    if (fd < 0)
-        return FALSE;
-
-    pfd.fd = fd;
-    pfd.events = POLLIN;
-    pfd.revents = 0;
-
-    poll_result = poll(&pfd, 1, timeout_ms);
-    if (poll_result <= 0)
-        return FALSE;
-
-    if ((pfd.revents & POLLIN) == 0)
-        return FALSE;
-
-    bytes_read = read(fd, probe, sizeof(probe));
-    if (bytes_read <= 0)
-        return FALSE;
-
-    return TRUE;
-}
-
-// static gpointer uart_port_read_thread(gpointer data) {
-//     UartPort *port = data;
-//     guint8 frame[UART_FRAME_SIZE];
-//     gsize filled = 0;
-
-//     while (port && port->running) {
-//         ssize_t n;
-
-//         if (port->fd < 0)
-//             break;
-
-//         n = read(port->fd, frame + filled, UART_FRAME_SIZE - filled);
-
-//         if (n > 0) {
-//             filled += (gsize)n;
-
-//             if (filled == UART_FRAME_SIZE) {
-//                 if (port->callback)
-//                     port->callback(frame, UART_FRAME_SIZE, port->user_data);
-
-//                 filled = 0;
-//             }
-
-//             continue;
-//         }
-
-//         if (n == 0) {
-//             g_usleep(2000);
-//             continue;
-//         }
-
-//         break;
-//     }
-
-//     port->running = FALSE;
-//     return NULL;
-// }
-
 static gpointer uart_port_read_thread(gpointer data) {
     UartPort *port = data;
-    guint8 buffer[256];
+    guint8 frame[UART_FRAME_SIZE];
+    gsize filled = 0;
 
     while (port && port->running) {
         ssize_t n;
@@ -187,30 +104,29 @@ static gpointer uart_port_read_thread(gpointer data) {
         if (port->fd < 0)
             break;
 
-        n = read(port->fd, buffer, sizeof(buffer));
+        n = read(port->fd, frame + filled, UART_FRAME_SIZE - filled);
 
         if (n > 0) {
-            g_print("[UART RX] %zd bytes: ", n);
-            for (ssize_t i = 0; i < n; i++)
-                g_print("%02X ", buffer[i]);
-            g_print("\n");
+            filled += (gsize)n;
 
-            if (port->callback)
-                port->callback(buffer, (gsize)n, port->user_data);
+            if (filled == UART_FRAME_SIZE) {
+                g_print("[UART RX] complete frame: %d bytes\n", UART_FRAME_SIZE);
+                if (port->callback)
+
+                    port->callback(frame, UART_FRAME_SIZE, port->user_data);
+
+                filled = 0;
+            }
 
             continue;
         }
 
-        if (n == 0) {
+        if (n == 0 || errno == EAGAIN || errno == EWOULDBLOCK) {
             g_usleep(2000);
             continue;
         }
 
-        if (errno == EAGAIN || errno == EWOULDBLOCK) {
-            g_usleep(2000);
-            continue;
-        }
-
+        g_print("[UART RX] read error: %s\n", g_strerror(errno));
         break;
     }
 
@@ -241,9 +157,12 @@ void uart_port_free(UartPort *port) {
 
 gboolean uart_port_open(UartPort *port, const gchar *device_path) {
     int fd;
+    const gchar *path;
 
-    if (!port || !device_path)
+    if (!port)
         return FALSE;
+
+    path = (device_path && *device_path) ? device_path : UART_DEFAULT_DEVICE;
 
     uart_port_close(port);
 
@@ -254,6 +173,7 @@ gboolean uart_port_open(UartPort *port, const gchar *device_path) {
     port->fd = fd;
     port->device_path = g_strdup(device_path);
 
+    g_print("[UART] connected to %s\n", port->device_path);
     return TRUE;
 }
 
@@ -267,33 +187,6 @@ void uart_port_close(UartPort *port) {
     }
 
     g_clear_pointer(&port->device_path, g_free);
-}
-
-gboolean uart_port_find_working_device(UartPort *port) {
-    int i;
-
-    if (!port)
-        return FALSE;
-
-    for (i = 0; UART_CANDIDATE_PORTS[i] != NULL; i++) {
-        const gchar *candidate = UART_CANDIDATE_PORTS[i];
-        int fd = uart_port_open_fd(candidate, port->baudrate);
-
-        if (fd < 0)
-            continue;
-
-        if (uart_port_wait_for_signal(fd, UART_DETECT_TIMEOUT_MS)) {
-            uart_port_close(port);
-            port->fd = fd;
-            port->device_path = g_strdup(candidate);
-
-            return TRUE;
-        }
-
-        close(fd);
-    }
-
-    return FALSE;
 }
 
 gboolean uart_port_start(UartPort *port) {
@@ -318,7 +211,7 @@ void uart_port_stop(UartPort *port) {
     if (!port)
         return;
 
-    if (!port->running && port->thread)
+    if (!port->running && !port->thread)
         return;
 
     port->running = FALSE;
@@ -327,18 +220,4 @@ void uart_port_stop(UartPort *port) {
         g_thread_join(port->thread);
         port->thread = NULL;
     }
-}
-
-const gchar *uart_port_get_device_path(const UartPort *port) {
-    if (!port)
-        return NULL;
-
-    return port->device_path;
-}
-
-gboolean uart_port_is_running(const UartPort *port) {
-    if (!port)
-        return FALSE;
-
-    return port->running;
 }

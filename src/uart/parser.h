@@ -4,9 +4,7 @@
 #include <glib.h>
 #include <stdint.h>
 
-#define UART_FRAME_SIZE 136
-#define UART_HEADER_SIZE 8
-#define UART_BODY_SIZE 128
+#include "common/contants.h"
 
 typedef struct {
     uint8_t header[UART_HEADER_SIZE];

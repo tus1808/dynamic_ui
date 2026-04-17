@@ -2,6 +2,7 @@
 
 #include <glib.h>
 
+#include "common/contants.h"
 #include "config/layout_store.h"
 #include "config/loader.h"
 #include "mode/manager.h"
@@ -82,23 +83,15 @@ void app_uart_init(AppController *controller) {
         return;
     }
 
-    // if (!uart_port_find_working_device(state->uart_port)) {
-    //     g_printerr("No active UART port found.\n");
-    //     uart_port_free(state->uart_port);
-    //     state->uart_port = NULL;
-
-    //     return;
-    // }
-
-    if (!uart_port_open(state->uart_port, "/dev/ttyS1")) {
-        g_printerr("Failed to open /dev/ttyS1\n");
+    if (!uart_port_open(state->uart_port, UART_DEFAULT_DEVICE)) {
+        g_printerr("Failed to open %s\n", UART_DEFAULT_DEVICE);
         uart_port_free(state->uart_port);
         state->uart_port = NULL;
 
         return;
     }
 
-    g_print("Using UART port: %s\n", uart_port_get_device_path(state->uart_port));
+    g_print("Using UART port: %s\n", UART_DEFAULT_DEVICE);
 
     if (!uart_port_start(state->uart_port)) {
         g_printerr("Failed to start UART read thread.\n");

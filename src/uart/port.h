@@ -24,6 +24,5 @@ gboolean uart_port_start(UartPort *port);
 void uart_port_stop(UartPort *port);
 
 const gchar *uart_port_get_device_path(const UartPort *port);
-gboolean uart_port_is_running(const UartPort *port);
 
 G_END_DECLS

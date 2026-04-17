@@ -16,37 +16,31 @@ struct _DataDispatcher {
     AppState *state;
 };
 
-void data_dispatcher_print_frame_to_terminal(const guint8 *frame, gsize frame_size) {
-    gsize i;
+static void data_dispatcher_print_frame_to_terminal(const guint8 *frame) {
+    guint i;
 
-    if (!frame || frame_size == 0)
+    if (!frame)
         return;
 
-    g_print("\n[UART] Frame received ($%zu bytes)\n", frame_size);
-    g_print("[UART] Header: ");
+    g_print("\n[UART] Frame received (%d bytes)\n", UART_FRAME_SIZE);
 
-    for (i = 0; i < frame_size && i < UART_FRAME_SIZE; i++) {
-        g_print("%02X", frame[i]);
+    g_print("[UART] Header: ");
+    for (i = 0; i < UART_HEADER_SIZE; i++) {
+        g_print("%02X ", frame[i]);
     }
     g_print("\n");
 
-    g_print("[UART] Payload:\n");
+    g_print("[UART] Body:\n");
+    for (i = 0; i < UART_BODY_SIZE; i++) {
+        g_print("%02X ", frame[UART_HEADER_SIZE + i]);
 
-    for (i = UART_HEADER_SIZE; i < frame_size; i++) {
-        g_print("%02X ", frame[i]);
-
-        if (((i - UART_HEADER_SIZE + 1) % 16) == 0)
+        if (((i + 1) % 16) == 0)
             g_print("\n");
     }
-
-    if (((frame_size - UART_HEADER_SIZE) % 16) != 0)
-        g_print("\n");
 }
 
-static void
-data_dispatcher_update_ui(DataDispatcher *dispatcher, const guint8 *frame, gsize frame_size) {
+static void data_dispatcher_update_ui(DataDispatcher *dispatcher, const guint8 *frame) {
     AppState *state;
-    guint payload_count;
     guint visible_count;
     guint i;
 
@@ -55,23 +49,22 @@ data_dispatcher_update_ui(DataDispatcher *dispatcher, const guint8 *frame, gsize
 
     state = dispatcher->state;
 
-    if (!state->value_items || frame_size <= UART_HEADER_SIZE)
+    if (!state->value_items)
         return;
 
-    payload_count = (guint)(frame_size - UART_HEADER_SIZE);
-    visible_count = MIN(payload_count, state->value_items->len);
+    visible_count = MIN((guint)UART_BODY_SIZE, state->value_items->len);
 
     for (i = 0; i < visible_count; i++) {
         GtkWidget *item_widget;
-        guint8 code;
+        guint8 value;
         gchar text[8];
 
         item_widget = g_ptr_array_index(state->value_items, i);
         if (!item_widget)
             continue;
 
-        code = frame[UART_HEADER_SIZE + i];
-        g_snprintf(text, sizeof(text), "%02X", code);
+        value = frame[UART_HEADER_SIZE + i];
+        g_snprintf(text, sizeof(text), "02%X", value);
 
         ui_value_item_set_value(item_widget, text);
     }
@@ -85,8 +78,8 @@ static gboolean data_dispatcher_apply_on_main_thread(gpointer user_data) {
         return G_SOURCE_REMOVE;
     }
 
-    data_dispatcher_print_frame_to_terminal(job->frame, job->frame_size);
-    data_dispatcher_update_ui(job->dispatcher, job->frame, job->frame_size);
+    data_dispatcher_print_frame_to_terminal(job->frame);
+    data_dispatcher_update_ui(job->dispatcher, job->frame);
 
     g_free(job);
     return G_SOURCE_REMOVE;
@@ -119,8 +112,11 @@ void data_dispatcher_submit_frame(
     if (!dispatcher || !dispatcher->state || !frame || frame_size == 0)
         return;
 
-    if (frame_size > UART_FRAME_SIZE)
-        frame_size = UART_FRAME_SIZE;
+    if (frame_size != UART_FRAME_SIZE) {
+        g_print("[UART] ignored frame with invalid size: %zu\n", frame_size);
+
+        return;
+    }
 
     job = g_new0(DispatchJob, 1);
     job->dispatcher = dispatcher;
