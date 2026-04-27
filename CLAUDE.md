@@ -64,6 +64,47 @@ src/
 - `config/layout.json` — array of `LayoutItem` objects persisted on editor save
 - `assets/app.css` — GTK3 stylesheet applied at startup
 
+## Testing UART Frames
+
+UART data is tested manually using **H-Term 0.8.5** (Windows) in hex send mode. Connect H-Term to the same serial port the Raspberry Pi reads from (e.g. via USB-UART adapter).
+
+### Test frame files
+
+Pre-built binary frames are in `test/uart_frames/`:
+
+| File | Size | Purpose |
+|------|------|---------|
+| `frame_data_full.bin` | 136 B | Full DATA frame — exercises all three display cases |
+| `frame_time_full.bin` | 136 B | Full TIME frame — sets system clock to 2026-04-27 10:30:00 |
+| `frame_partial.bin` | 64 B | Incomplete frame — verifies read-thread accumulation (no dispatch until 136 B arrive) |
+
+### Frame layout reference
+
+```
+Byte  0    : 0xAA  — handshake
+Byte  1    : 0x01 = DATA frame | 0x02 = TIME frame
+Bytes 2–7  : 0x00  — reserved
+Bytes 8–135: body (128 bytes)
+```
+
+**DATA frame body decode (per byte):**
+- `0x01`–`0x09` → display `"1"`–`"9"`
+- `0x10`–`0x19` → display `"1."`–`"9."` (with decimal point; `0x19` clamps to `"9."`)
+- anything else → display empty
+
+**TIME frame body layout:**
+```
+body[0] = years since 2000   body[1] = month (1-12)   body[2] = day
+body[3] = hour (0-23)        body[4] = minute (0-59)  body[5] = second (0-59)
+```
+
+### How to send with H-Term 0.8.5
+
+1. Open H-Term → connect to the COM port at **9600 baud, 8N1** (maps to `/dev/serial0` on the Raspberry Pi)
+2. Switch input mode to **Hex**
+3. Use **"Send File"** and select one of the `.bin` files above
+4. Watch the Raspberry Pi terminal output for `[UART] Frame received` log
+
 ## Development Notes
 
 - The project is developed on Windows but **targets Linux on Raspberry Pi 3 Model B**. The VSCode C/C++ config (`dynamic_ui/.vscode/c_cpp_properties.json`) points to a Linux gcc path — expect IntelliSense to be approximate on Windows.

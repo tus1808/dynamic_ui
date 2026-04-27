@@ -41,12 +41,13 @@ static void data_dispatcher_print_frame_to_terminal(const guint8 *frame) {
     }
 }
 
-/* 0x01-0x09 → "01"-"09"  |  0x10-0x18 → "01."-"09."  |  else → "" */
+/* 0x01-0x09 → "1"-"9"  |  0x10-0x19 → "1."-"9."  |  else → "" */
 static void decode_data_byte(guint8 code, gchar *text, gsize text_len) {
     if (code >= 0x01 && code <= 0x09) {
-        g_snprintf(text, text_len, "%02d", (int)code);
-    } else if (code >= 0x10 && code <= 0x18) {
-        g_snprintf(text, text_len, "%02d.", (int)(code - 0x0F));
+        g_snprintf(text, text_len, "%d", (int)code);
+    } else if (code >= 0x10 && code <= 0x19) {
+        int digit = (int)(code - 0x0F);
+        g_snprintf(text, text_len, "%d.", digit > 9 ? 9 : digit);
     } else {
         text[0] = '\0';
     }

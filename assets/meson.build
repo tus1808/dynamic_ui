@@ -11,6 +11,18 @@ configure_file(
 )
 
 configure_file(
+  input: 'background3.gif',
+  output: 'background3.gif',
+  copy: true,
+)
+
+configure_file(
+  input: 'sacombank.jpg',
+  output: 'sacombank.jpg',
+  copy: true,
+)
+
+configure_file(
   input: 'app.css',
   output: 'app.css',
   copy: true,
