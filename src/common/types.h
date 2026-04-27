@@ -9,6 +9,7 @@ typedef struct {
     gchar *layout_file_path;
     gchar *css_file_path;
     gchar *editor_password;
+    gchar *marquee_content;
 } AppConfig;
 
 typedef struct {

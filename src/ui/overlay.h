@@ -11,5 +11,6 @@ GtkWidget *ui_overlay_get_background(GtkWidget *overlay);
 GtkWidget *ui_overlay_get_toolbar(GtkWidget *overlay);
 
 void ui_overlay_set_toolbar(GtkWidget *overlay, GtkWidget *toolbar);
+void ui_overlay_set_marquee(GtkWidget *overlay, GtkWidget *marquee);
 
 #endif

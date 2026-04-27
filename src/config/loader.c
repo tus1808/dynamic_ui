@@ -22,6 +22,7 @@ gboolean config_loader_load_app_config(const char *file_path, AppConfig *app_con
     app_config->layout_file_path = NULL;
     app_config->css_file_path = NULL;
     app_config->editor_password = NULL;
+    app_config->marquee_content = NULL;
 
     parser = json_parser_new();
 
@@ -52,6 +53,7 @@ gboolean config_loader_load_app_config(const char *file_path, AppConfig *app_con
     app_config->layout_file_path = json_dup_string_member(obj, "layout_file_path");
     app_config->css_file_path = json_dup_string_member(obj, "css_file_path");
     app_config->editor_password = json_dup_string_member(obj, "editor_password");
+    app_config->marquee_content = json_dup_string_member(obj, "marquee_content");
 
     g_object_unref(parser);
 
@@ -98,6 +100,10 @@ gboolean config_loader_save_app_config(const char *file_path, const AppConfig *a
         json_builder_set_member_name(builder, "editor_password");
         json_builder_add_string_value(builder, app_config->editor_password);
     }
+    if (app_config->marquee_content) {
+        json_builder_set_member_name(builder, "marquee_content");
+        json_builder_add_string_value(builder, app_config->marquee_content);
+    }
     json_builder_end_object(builder);
 
     root = json_builder_get_root(builder);
@@ -133,4 +139,5 @@ void config_loader_free_app_config(AppConfig *config) {
     g_clear_pointer(&config->layout_file_path, g_free);
     g_clear_pointer(&config->css_file_path, g_free);
     g_clear_pointer(&config->editor_password, g_free);
+    g_clear_pointer(&config->marquee_content, g_free);
 }

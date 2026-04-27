@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(meson setup build)",
+      "Bash(meson build --reconfigure)",
+      "Bash(meson compile -C build)",
+      "Bash(meson compile -C build:*)",
+      "Bash(ninja -C build)",
+      "Bash(ls *)",
+      "Bash(ls)",
+      "Bash(cat *)",
+      "Bash(grep *)",
+      "Bash(find src -name *)",
+      "Bash(pkg-config *)",
+      "Bash(gcc *)",
+      "Bash(sha256sum *)",
+      "Bash(python3 -c *)",
+      "Bash(scp * orangepi@192.168.1.102:*)",
+      "Bash(ssh orangepi@192.168.1.102 *)",
+      "Bash(ping -c 1 192.168.1.102)"
+    ],
+    "deny": []
+  },
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "E:\\Workspace\\dynamic_ui"
+      ],
+      "env": {}
+    }
+  }
+}

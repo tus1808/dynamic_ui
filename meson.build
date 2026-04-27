@@ -30,6 +30,7 @@ app_sources = files(
   'src/uart/port.c',
   'src/ui/canvas.c',
   'src/ui/editor_mode.c',
+  'src/ui/marquee.c',
   'src/ui/editor_toolbar.c',
   'src/ui/overlay.c',
   'src/ui/read_mode.c',

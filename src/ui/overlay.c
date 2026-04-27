@@ -84,6 +84,22 @@ GtkWidget *ui_overlay_get_toolbar(GtkWidget *overlay) {
     return g_object_get_data(G_OBJECT(overlay), "overlay-toolbar");
 }
 
+void ui_overlay_set_marquee(GtkWidget *overlay, GtkWidget *marquee) {
+    GtkWidget *old;
+
+    if (!GTK_IS_OVERLAY(overlay) || !GTK_IS_WIDGET(marquee))
+        return;
+
+    old = g_object_get_data(G_OBJECT(overlay), "overlay-marquee");
+    if (old)
+        gtk_container_remove(GTK_CONTAINER(overlay), old);
+
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), marquee);
+    gtk_widget_show(marquee);
+
+    g_object_set_data(G_OBJECT(overlay), "overlay-marquee", marquee);
+}
+
 void ui_overlay_set_toolbar(GtkWidget *overlay, GtkWidget *toolbar) {
     GtkWidget *old_toolbar;
 

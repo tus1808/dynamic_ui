@@ -8,6 +8,7 @@
 #include "mode/manager.h"
 #include "uart/port.h"
 #include "ui/canvas.h"
+#include "ui/marquee.h"
 #include "ui/overlay.h"
 #include "ui/window.h"
 
@@ -191,6 +192,11 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
     controller->editor_toolbar = editor_toolbar_new(controller);
     GtkWidget *toolbar_container = editor_toolbar_get_widget(controller->editor_toolbar);
     ui_overlay_set_toolbar(controller->state->overlay, toolbar_container);
+
+    if (controller->state->config.marquee_content) {
+        GtkWidget *marquee = ui_marquee_create(controller->state->config.marquee_content);
+        ui_overlay_set_marquee(controller->state->overlay, marquee);
+    }
 
     app_controller_load_css(controller->state->config.css_file_path);
 
