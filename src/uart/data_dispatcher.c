@@ -105,7 +105,7 @@ static void data_dispatcher_apply_time(const guint8 *frame) {
     tv.tv_sec  = epoch;
     tv.tv_usec = 0;
 
-    if (settimeofday(&tv, NULL) != 0) {
+    if (gettimeofday(&tv, NULL) != 0) {
         g_warning("[UART] Failed to set system time (requires root)");
     } else {
         g_print(
