@@ -1,6 +1,7 @@
 #include "ui/value_item.h"
 
 #include <gdk/gdk.h>
+#include <pango/pango.h>
 
 #include "ui/canvas.h"
 #include "ui/resize_handle.h"
@@ -14,8 +15,7 @@ static gint compute_font_size(gint height) {
 
 void ui_value_item_apply_font_size(GtkWidget *event_box, gint height) {
     GtkWidget *label;
-    GtkCssProvider *provider;
-    gchar *css;
+    PangoAttrList *attrs;
     gint font_size;
     gint last;
 
@@ -29,22 +29,10 @@ void ui_value_item_apply_font_size(GtkWidget *event_box, gint height) {
         return;
     g_object_set_data(G_OBJECT(event_box), "last-font-size", GINT_TO_POINTER(font_size));
 
-    provider = g_object_get_data(G_OBJECT(event_box), "font-css-provider");
-    if (!provider) {
-        provider = gtk_css_provider_new();
-        gtk_style_context_add_provider(
-            gtk_widget_get_style_context(label),
-            GTK_STYLE_PROVIDER(provider),
-            GTK_STYLE_PROVIDER_PRIORITY_USER
-        );
-        g_object_set_data_full(
-            G_OBJECT(event_box), "font-css-provider", provider, g_object_unref
-        );
-    }
-
-    css = g_strdup_printf("label { font-size: %dpx; }", font_size);
-    gtk_css_provider_load_from_data(provider, css, -1, NULL);
-    g_free(css);
+    attrs = pango_attr_list_new();
+    pango_attr_list_insert(attrs, pango_attr_size_new_absolute(font_size * PANGO_SCALE));
+    gtk_label_set_attributes(GTK_LABEL(label), attrs);
+    pango_attr_list_unref(attrs);
 }
 
 static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
@@ -417,6 +405,7 @@ void ui_value_item_set_read_mode(GtkWidget *widget, gboolean read_mode) {
             item = ui_value_item_get_layout_item(widget);
             gtk_label_set_text(GTK_LABEL(label_id), item && item->_id ? item->_id : "");
             gtk_widget_show(label_id);
+            gtk_widget_queue_resize(widget);
         }
     }
 }
