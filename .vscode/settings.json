@@ -34,7 +34,8 @@
     "vexpand",
     "pixbuf",
     "uart",
-    "crtscts"
+    "crtscts",
+    "gstreamer"
   ],
   "cSpell.ignorePaths": [
     "build/**",

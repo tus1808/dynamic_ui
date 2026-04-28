@@ -13,6 +13,9 @@ gboolean ui_value_item_is_selected(GtkWidget *widget);
 void ui_value_item_set_editable(GtkWidget *widget, gboolean editable);
 gboolean ui_value_item_is_editable(GtkWidget *widget);
 
+void ui_value_item_apply_font_size(GtkWidget *widget, gint height);
+void ui_value_item_set_read_mode(GtkWidget *widget, gboolean read_mode);
+
 LayoutItem *ui_value_item_get_layout_item(GtkWidget *widget);
 
 #endif

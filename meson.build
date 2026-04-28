@@ -11,6 +11,13 @@ project(
 gtk_dep  = dependency('gtk+-3.0')
 json_dep = dependency('json-glib-1.0')
 
+gst_dep       = dependency('gstreamer-1.0',       required: false)
+gst_video_dep = dependency('gstreamer-video-1.0', required: false)
+
+if gst_dep.found() and gst_video_dep.found()
+  add_project_arguments('-DHAVE_GSTREAMER', language: 'c')
+endif
+
 src_inc = include_directories('src')
 
 subdir('assets')
@@ -46,6 +53,8 @@ dynamic_ui = executable(
   dependencies: [
     gtk_dep,
     json_dep,
+    gst_dep,
+    gst_video_dep,
   ],
   install: true,
 )

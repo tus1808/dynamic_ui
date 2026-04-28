@@ -37,13 +37,21 @@ void editor_mode_free(EditorMode *mode) {
 }
 
 void editor_mode_enter(EditorMode *mode) {
+    AppState *state;
+
     if (!mode || !mode->controller || !mode->controller->state)
         return;
 
-    mode->controller->state->current_mode = APP_MODE_EDITOR;
+    state = mode->controller->state;
+    state->current_mode = APP_MODE_EDITOR;
 
-    if (mode->controller->state->canvas)
-        ui_canvas_set_interactive(mode->controller->state->canvas, TRUE);
+    if (state->canvas)
+        ui_canvas_set_interactive(state->canvas, TRUE);
+
+    if (state->value_items) {
+        for (guint i = 0; i < state->value_items->len; i++)
+            ui_value_item_set_read_mode(g_ptr_array_index(state->value_items, i), FALSE);
+    }
 
     g_print("[MODE] Enter EDITOR mode\n");
 }
@@ -80,6 +88,8 @@ void editor_mode_add_one_item(EditorMode *mode) {
     widget = ui_canvas_add_item(state->canvas, item);
     if (widget) {
         g_ptr_array_add(state->value_items, widget);
+        ui_value_item_apply_font_size(widget, item->height);
+        ui_value_item_set_read_mode(widget, FALSE);
         ui_canvas_select_only(state->canvas, widget);
     }
 }
@@ -207,6 +217,8 @@ void editor_mode_show_info_box(EditorMode *mode) {
 
         gtk_fixed_move(GTK_FIXED(state->canvas), widget, item->x, item->y);
         gtk_widget_set_size_request(widget, item->width, item->height);
+        ui_value_item_apply_font_size(widget, item->height);
+        ui_value_item_set_read_mode(widget, FALSE);
         ui_value_item_set_value(widget, item->value);
     }
 
@@ -234,6 +246,17 @@ void editor_mode_change_background(EditorMode *mode) {
         GTK_RESPONSE_ACCEPT,
         NULL
     );
+
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, "Images & Videos");
+    gtk_file_filter_add_pattern(filter, "*.jpg");
+    gtk_file_filter_add_pattern(filter, "*.jpeg");
+    gtk_file_filter_add_pattern(filter, "*.png");
+    gtk_file_filter_add_pattern(filter, "*.gif");
+    gtk_file_filter_add_pattern(filter, "*.mp4");
+    gtk_file_filter_add_pattern(filter, "*.mkv");
+    gtk_file_filter_add_pattern(filter, "*.avi");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dialog), filter);
 
     response = gtk_dialog_run(GTK_DIALOG(dialog));
     if (response == GTK_RESPONSE_ACCEPT)

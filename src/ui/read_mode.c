@@ -7,6 +7,7 @@
 #include "app/controller.h"
 #include "app/state.h"
 #include "ui/canvas.h"
+#include "ui/value_item.h"
 
 ReadMode *read_mode_new(AppController *controller) {
     ReadMode *mode = g_new0(ReadMode, 1);
@@ -33,6 +34,12 @@ void read_mode_enter(ReadMode *mode) {
 
     if (mode->controller->state->canvas) {
         ui_canvas_set_interactive(mode->controller->state->canvas, FALSE);
+    }
+
+    if (mode->controller->state->value_items) {
+        GPtrArray *items = mode->controller->state->value_items;
+        for (guint i = 0; i < items->len; i++)
+            ui_value_item_set_read_mode(g_ptr_array_index(items, i), TRUE);
     }
 
     if (mode->controller->state->window) {

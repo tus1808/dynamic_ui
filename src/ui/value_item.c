@@ -5,6 +5,48 @@
 #include "ui/canvas.h"
 #include "ui/resize_handle.h"
 
+static gint compute_font_size(gint height) {
+    gint size = (gint)(height * 0.40);
+    if (size < 10) size = 10;
+    if (size > 72) size = 72;
+    return size;
+}
+
+void ui_value_item_apply_font_size(GtkWidget *event_box, gint height) {
+    GtkWidget *label;
+    GtkCssProvider *provider;
+    gchar *css;
+    gint font_size;
+    gint last;
+
+    label = g_object_get_data(G_OBJECT(event_box), "value-label");
+    if (!label)
+        return;
+
+    font_size = compute_font_size(height);
+    last = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(event_box), "last-font-size"));
+    if (font_size == last)
+        return;
+    g_object_set_data(G_OBJECT(event_box), "last-font-size", GINT_TO_POINTER(font_size));
+
+    provider = g_object_get_data(G_OBJECT(event_box), "font-css-provider");
+    if (!provider) {
+        provider = gtk_css_provider_new();
+        gtk_style_context_add_provider(
+            gtk_widget_get_style_context(label),
+            GTK_STYLE_PROVIDER(provider),
+            GTK_STYLE_PROVIDER_PRIORITY_USER
+        );
+        g_object_set_data_full(
+            G_OBJECT(event_box), "font-css-provider", provider, g_object_unref
+        );
+    }
+
+    css = g_strdup_printf("label { font-size: %dpx; }", font_size);
+    gtk_css_provider_load_from_data(provider, css, -1, NULL);
+    g_free(css);
+}
+
 static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     GtkWidget *canvas;
     LayoutItem *item;
@@ -194,6 +236,7 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
 
         gtk_fixed_move(GTK_FIXED(canvas), widget, new_x, new_y);
         gtk_widget_set_size_request(widget, new_w, new_h);
+        ui_value_item_apply_font_size(widget, new_h);
 
         gtk_widget_queue_resize(widget);
         gtk_widget_queue_draw(widget);
@@ -226,7 +269,9 @@ static gboolean on_leave_notify(GtkWidget *widget, GdkEventCrossing *event, gpoi
 
 GtkWidget *ui_value_item_create(const LayoutItem *item) {
     GtkWidget *event_box = NULL;
+    GtkWidget *vbox = NULL;
     GtkWidget *label_value = NULL;
+    GtkWidget *label_id = NULL;
     gchar *value_text = NULL;
 
     if (!item)
@@ -236,6 +281,12 @@ GtkWidget *ui_value_item_create(const LayoutItem *item) {
     gtk_style_context_add_class(gtk_widget_get_style_context(event_box), "event-box");
     gtk_widget_set_size_request(event_box, item->width, item->height);
 
+    vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+    gtk_widget_set_halign(vbox, GTK_ALIGN_FILL);
+    gtk_widget_set_valign(vbox, GTK_ALIGN_FILL);
+    gtk_widget_set_hexpand(vbox, TRUE);
+    gtk_widget_set_vexpand(vbox, TRUE);
+
     value_text = g_strdup_printf("%s", item->value ? item->value : "--");
     label_value = gtk_label_new(value_text);
     g_free(value_text);
@@ -244,16 +295,20 @@ GtkWidget *ui_value_item_create(const LayoutItem *item) {
     gtk_label_set_yalign(GTK_LABEL(label_value), 0.5f);
     gtk_label_set_justify(GTK_LABEL(label_value), GTK_JUSTIFY_CENTER);
     gtk_label_set_line_wrap(GTK_LABEL(label_value), TRUE);
-
     gtk_widget_set_halign(label_value, GTK_ALIGN_FILL);
     gtk_widget_set_valign(label_value, GTK_ALIGN_FILL);
     gtk_widget_set_hexpand(label_value, TRUE);
     gtk_widget_set_vexpand(label_value, TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox), label_value, TRUE, TRUE, 0);
 
-    gtk_container_add(GTK_CONTAINER(event_box), label_value);
-    g_object_set_data(G_OBJECT(event_box), "value-label", label_value);
+    label_id = gtk_label_new(item->_id ? item->_id : "");
+    gtk_style_context_add_class(gtk_widget_get_style_context(label_id), "id-label");
+    gtk_widget_set_halign(label_id, GTK_ALIGN_CENTER);
+    gtk_widget_set_no_show_all(label_id, TRUE);
+    gtk_box_pack_start(GTK_BOX(vbox), label_id, FALSE, FALSE, 0);
 
-    // Event
+    gtk_container_add(GTK_CONTAINER(event_box), vbox);
+
     gtk_widget_add_events(
         event_box,
         GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_POINTER_MOTION_MASK |
@@ -266,11 +321,13 @@ GtkWidget *ui_value_item_create(const LayoutItem *item) {
     g_signal_connect(event_box, "leave-notify-event", G_CALLBACK(on_leave_notify), NULL);
 
     g_object_set_data(G_OBJECT(event_box), "value-label", label_value);
+    g_object_set_data(G_OBJECT(event_box), "id-label", label_id);
     g_object_set_data(G_OBJECT(event_box), "layout-item", (gpointer)item);
     g_object_set_data(G_OBJECT(event_box), "selected", GINT_TO_POINTER(FALSE));
     g_object_set_data(G_OBJECT(event_box), "editable", GINT_TO_POINTER(FALSE));
 
     gtk_widget_show_all(event_box);
+    ui_value_item_apply_font_size(event_box, item->height);
     return event_box;
 }
 
@@ -337,4 +394,29 @@ LayoutItem *ui_value_item_get_layout_item(GtkWidget *widget) {
         return NULL;
 
     return g_object_get_data(G_OBJECT(widget), "layout-item");
+}
+
+void ui_value_item_set_read_mode(GtkWidget *widget, gboolean read_mode) {
+    GtkStyleContext *ctx;
+    GtkWidget *label_id;
+    LayoutItem *item;
+
+    if (!widget)
+        return;
+
+    ctx = gtk_widget_get_style_context(widget);
+    label_id = g_object_get_data(G_OBJECT(widget), "id-label");
+
+    if (read_mode) {
+        gtk_style_context_add_class(ctx, "read-mode");
+        if (label_id)
+            gtk_widget_hide(label_id);
+    } else {
+        gtk_style_context_remove_class(ctx, "read-mode");
+        if (label_id) {
+            item = ui_value_item_get_layout_item(widget);
+            gtk_label_set_text(GTK_LABEL(label_id), item && item->_id ? item->_id : "");
+            gtk_widget_show(label_id);
+        }
+    }
 }

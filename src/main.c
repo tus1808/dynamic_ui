@@ -1,12 +1,20 @@
 #include <gtk/gtk.h>
 #include "app/controller.h"
 
+#ifdef HAVE_GSTREAMER
+#include <gst/gst.h>
+#endif
+
 static void on_activate(GtkApplication *app, gpointer user_data) {
     AppController *controller = user_data;
     app_controller_activate(controller, app);
 }
 
 int main(int argc, char **argv) {
+#ifdef HAVE_GSTREAMER
+    gst_init(&argc, &argv);
+#endif
+
     AppController *controller = app_controller_new();
 
     GtkApplication *app =

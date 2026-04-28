@@ -2,11 +2,20 @@
 .event-box {
   border: 1px solid black;
   background: #f3f3f3;
-  font-size: 18px;
+}
+
+.event-box.read-mode {
+  border: none;
+  background: transparent;
 }
 
 .selected {
   border: 2px solid black;
+}
+
+.id-label {
+  font-size: 10px;
+  color: #aaaaaa;
 }
 
 /* Auth */

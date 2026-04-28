@@ -5,6 +5,7 @@
 
 GtkWidget *ui_overlay_create(GtkWidget *canvas);
 gboolean ui_overlay_set_background(GtkWidget *overlay, const char *image_path);
+void ui_overlay_stop_video(GtkWidget *overlay);
 
 GtkWidget *ui_overlay_get_canvas(GtkWidget *overlay);
 GtkWidget *ui_overlay_get_background(GtkWidget *overlay);
