@@ -6,8 +6,11 @@
 #include "config/layout_store.h"
 #include "config/loader.h"
 #include "mode/manager.h"
+#include "net/ip_setter.h"
+#include "net/ws_server.h"
 #include "uart/port.h"
 #include "ui/canvas.h"
+#include "ui/clock_widget.h"
 #include "ui/marquee.h"
 #include "ui/overlay.h"
 #include "ui/window.h"
@@ -122,6 +125,8 @@ void app_controller_free(AppController *controller) {
     if (!controller)
         return;
 
+    ws_server_stop();
+
     mode_manager_free(controller->mode_manager);
     read_mode_free(controller->read_mode);
     editor_mode_free(controller->editor_mode);
@@ -143,6 +148,9 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
         g_warning("Failed to load app config");
         return;
     }
+
+    /* Apply static IP from config (non-fatal if root or eth0 is missing). */
+    ip_setter_apply(controller->state->config.network.ip_address);
 
     controller->state->canvas = ui_canvas_create();
     if (!controller->state->canvas) {
@@ -193,9 +201,37 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
     GtkWidget *toolbar_container = editor_toolbar_get_widget(controller->editor_toolbar);
     ui_overlay_set_toolbar(controller->state->overlay, toolbar_container);
 
-    if (controller->state->config.marquee_content) {
-        GtkWidget *marquee = ui_marquee_create(controller->state->config.marquee_content);
-        ui_overlay_set_marquee(controller->state->overlay, marquee);
+    if (controller->state->config.marquee.content &&
+        controller->state->config.marquee.content[0] != '\0') {
+        GtkWidget *marquee = ui_marquee_create(&controller->state->config.marquee);
+        if (marquee)
+            ui_overlay_set_marquee(controller->state->overlay, marquee);
+    }
+
+    /* Time widget */
+    if (controller->state->config.time_zone.visibility) {
+        GtkWidget *clk = ui_clock_create(&controller->state->config.time_zone, FALSE);
+        if (clk) {
+            gtk_fixed_put(
+                GTK_FIXED(controller->state->canvas), clk,
+                controller->state->config.time_zone.location.x,
+                controller->state->config.time_zone.location.y
+            );
+            gtk_widget_show_all(clk);
+        }
+    }
+
+    /* Date widget */
+    if (controller->state->config.date_zone.visibility) {
+        GtkWidget *clk = ui_clock_create(&controller->state->config.date_zone, TRUE);
+        if (clk) {
+            gtk_fixed_put(
+                GTK_FIXED(controller->state->canvas), clk,
+                controller->state->config.date_zone.location.x,
+                controller->state->config.date_zone.location.y
+            );
+            gtk_widget_show_all(clk);
+        }
     }
 
     app_controller_load_css(controller->state->config.css_file_path);
@@ -204,4 +240,7 @@ void app_controller_activate(AppController *controller, GtkApplication *app) {
     mode_manager_enter_read_mode(controller->mode_manager);
 
     app_uart_init(controller);
+
+    /* Start LAN data ingestion (libsoup WebSocket server). */
+    ws_server_start(controller->state, controller->state->config.network.ws_port);
 }

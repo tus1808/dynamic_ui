@@ -2,10 +2,9 @@
 
 #include <glib.h>
 #include <string.h>
-#include <time.h>
-#include <sys/time.h>
 
 #include "common/contants.h"
+#include "common/time_setter.h"
 #include "ui/value_item.h"
 
 typedef struct {
@@ -84,36 +83,15 @@ static void data_dispatcher_update_ui(DataDispatcher *dispatcher, const guint8 *
 /* Body layout: [0]=year since 2000  [1]=month(1-12)  [2]=day  [3]=hour  [4]=min  [5]=sec */
 static void data_dispatcher_apply_time(const guint8 *frame) {
     const guint8 *body = frame + UART_HEADER_SIZE;
-    struct tm t = {0};
-    struct timeval tv;
-    time_t epoch;
 
-    t.tm_year  = (int)body[0] + 100; /* years since 1900 */
-    t.tm_mon   = (int)body[1] - 1;   /* 0-indexed */
-    t.tm_mday  = (int)body[2];
-    t.tm_hour  = (int)body[3];
-    t.tm_min   = (int)body[4];
-    t.tm_sec   = (int)body[5];
-    t.tm_isdst = -1;
-
-    epoch = mktime(&t);
-    if (epoch == (time_t)-1) {
-        g_warning("[UART] Time frame: invalid time values");
-        return;
-    }
-
-    tv.tv_sec  = epoch;
-    tv.tv_usec = 0;
-
-    if (gettimeofday(&tv, NULL) != 0) {
-        g_warning("[UART] Failed to set system time (requires root)");
-    } else {
-        g_print(
-            "[UART] System time updated: %04d-%02d-%02d %02d:%02d:%02d\n",
-            t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
-            t.tm_hour, t.tm_min, t.tm_sec
-        );
-    }
+    time_setter_apply(
+        2000 + (int)body[0],
+        (int)body[1],
+        (int)body[2],
+        (int)body[3],
+        (int)body[4],
+        (int)body[5]
+    );
 }
 
 static gboolean data_dispatcher_apply_on_main_thread(gpointer user_data) {

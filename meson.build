@@ -10,6 +10,7 @@ project(
 
 gtk_dep  = dependency('gtk+-3.0')
 json_dep = dependency('json-glib-1.0')
+soup_dep = dependency('libsoup-2.4')
 
 gst_dep       = dependency('gstreamer-1.0',       required: false)
 gst_video_dep = dependency('gstreamer-video-1.0', required: false)
@@ -27,15 +28,20 @@ app_sources = files(
   'src/main.c',
   'src/app/controller.c',
   'src/app/state.c',
+  'src/common/color.c',
+  'src/common/time_setter.c',
   'src/config/layout_store.c',
   'src/config/loader.c',
   'src/input/auth_manager.c',
   'src/input/hotkey_manager.c',
   'src/mode/manager.c',
+  'src/net/ip_setter.c',
+  'src/net/ws_server.c',
   'src/uart/data_dispatcher.c',
   'src/uart/parser.c',
   'src/uart/port.c',
   'src/ui/canvas.c',
+  'src/ui/clock_widget.c',
   'src/ui/editor_mode.c',
   'src/ui/marquee.c',
   'src/ui/editor_toolbar.c',
@@ -53,6 +59,7 @@ dynamic_ui = executable(
   dependencies: [
     gtk_dep,
     json_dep,
+    soup_dep,
     gst_dep,
     gst_video_dep,
   ],

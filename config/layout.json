@@ -1,18 +1,28 @@
 [
   {
     "_id": "item 1",
-    "x": 100,
-    "y": 80,
+    "index": 0,
+    "location": { "x": 100, "y": 80 },
     "width": 140,
     "height": 40,
-    "value": "00"
+    "value": "00",
+    "font_size": 0,
+    "font_style": "bold",
+    "font_color": "#000000",
+    "background_color": "#f3f3f3",
+    "background_transparent": false
   },
   {
     "_id": "item 2",
-    "x": 320,
-    "y": 80,
+    "index": 1,
+    "location": { "x": 320, "y": 80 },
     "width": 140,
     "height": 40,
-    "value": "00"
+    "value": "00",
+    "font_size": 0,
+    "font_style": "bold",
+    "font_color": "#000000",
+    "background_color": "#f3f3f3",
+    "background_transparent": false
   }
 ]

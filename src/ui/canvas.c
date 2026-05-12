@@ -50,7 +50,7 @@ void ui_canvas_render_items(GtkWidget *canvas, GPtrArray *items, GPtrArray *valu
 
         g_object_set_data(G_OBJECT(widget), "layout-item", item);
 
-        gtk_fixed_put(GTK_FIXED(canvas), widget, item->x, item->y);
+        gtk_fixed_put(GTK_FIXED(canvas), widget, item->location.x, item->location.y);
         gtk_widget_show(widget);
 
         if (value_items)
@@ -70,7 +70,7 @@ GtkWidget *ui_canvas_add_item(GtkWidget *canvas, LayoutItem *item) {
 
     g_object_set_data(G_OBJECT(widget), "layout-item", item);
 
-    gtk_fixed_put(GTK_FIXED(canvas), widget, item->x, item->y);
+    gtk_fixed_put(GTK_FIXED(canvas), widget, item->location.x, item->location.y);
     gtk_widget_show(widget);
 
     return widget;

@@ -13,14 +13,131 @@ static gint compute_font_size(gint height) {
     return size;
 }
 
+static const gchar *font_weight_for_style(const gchar *style) {
+    if (!style)
+        return "bold";
+    if (g_ascii_strcasecmp(style, "italic") == 0)
+        return "normal";
+    if (g_ascii_strcasecmp(style, "bold_italic") == 0)
+        return "bold";
+    if (g_ascii_strcasecmp(style, "normal") == 0)
+        return "normal";
+    /* default and explicit "bold" */
+    return "bold";
+}
+
+static const gchar *font_slant_for_style(const gchar *style) {
+    if (!style)
+        return "normal";
+    if (g_ascii_strcasecmp(style, "italic") == 0 ||
+        g_ascii_strcasecmp(style, "bold_italic") == 0)
+        return "italic";
+    return "normal";
+}
+
+static gchar *generate_class_name(GtkWidget *widget) {
+    return g_strdup_printf("vi-%p", (void *)widget);
+}
+
+static void apply_inline_css(GtkWidget *event_box, const LayoutItem *item) {
+    GtkStyleContext *ctx;
+    GtkCssProvider *provider;
+    GtkWidget *label_value;
+    gchar *class_name;
+    gchar *css;
+    gchar *bg_decl;
+    gint applied_font_size;
+
+    if (!event_box || !item)
+        return;
+
+    ctx = gtk_widget_get_style_context(event_box);
+    class_name = generate_class_name(event_box);
+    gtk_style_context_add_class(ctx, class_name);
+
+    label_value = g_object_get_data(G_OBJECT(event_box), "value-label");
+
+    applied_font_size = item->font_size > 0 ? item->font_size : compute_font_size(item->height);
+
+    if (item->background_transparent) {
+        bg_decl = g_strdup("background-color: transparent; background-image: none;");
+    } else {
+        bg_decl = g_strdup_printf(
+            "background-color: %s;",
+            item->background_color ? item->background_color : "#FFFFFF"
+        );
+    }
+
+    css = g_strdup_printf(
+        ".%s { %s }"
+        ".%s label { "
+        "  font-size: %dpx; "
+        "  font-weight: %s; "
+        "  font-style: %s; "
+        "  color: %s; "
+        "}",
+        class_name, bg_decl,
+        class_name,
+        applied_font_size,
+        font_weight_for_style(item->font_style),
+        font_slant_for_style(item->font_style),
+        item->font_color ? item->font_color : "#000000"
+    );
+
+    g_free(bg_decl);
+
+    /* Per-widget provider — attached to both event-box and inner label contexts so the
+     * cascade reaches the label. Detach any previous provider from BOTH contexts first. */
+    provider = g_object_get_data(G_OBJECT(event_box), "css-provider");
+    if (provider) {
+        gtk_style_context_remove_provider(ctx, GTK_STYLE_PROVIDER(provider));
+        if (label_value) {
+            gtk_style_context_remove_provider(
+                gtk_widget_get_style_context(label_value), GTK_STYLE_PROVIDER(provider)
+            );
+        }
+        g_object_unref(provider);
+    }
+
+    provider = gtk_css_provider_new();
+    gtk_css_provider_load_from_data(provider, css, -1, NULL);
+    gtk_style_context_add_provider(ctx, GTK_STYLE_PROVIDER(provider),
+                                   GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+    if (label_value) {
+        gtk_style_context_add_provider(gtk_widget_get_style_context(label_value),
+                                       GTK_STYLE_PROVIDER(provider),
+                                       GTK_STYLE_PROVIDER_PRIORITY_APPLICATION + 1);
+    }
+
+    g_object_set_data(G_OBJECT(event_box), "css-provider", provider);
+
+    /* track the explicit font size so apply_font_size can know whether to override */
+    g_object_set_data(G_OBJECT(event_box), "explicit-font-size",
+                      GINT_TO_POINTER(item->font_size));
+    g_object_set_data(G_OBJECT(event_box), "last-font-size",
+                      GINT_TO_POINTER(applied_font_size));
+
+    g_free(css);
+    g_free(class_name);
+}
+
 void ui_value_item_apply_font_size(GtkWidget *event_box, gint height) {
     GtkWidget *label;
     PangoAttrList *attrs;
+    gint explicit_font_size;
     gint font_size;
     gint last;
 
     label = g_object_get_data(G_OBJECT(event_box), "value-label");
     if (!label)
+        return;
+
+    /* When the item has an explicit font_size > 0, the CSS provider
+     * is authoritative; skip the height-derived auto-resize. */
+    explicit_font_size = GPOINTER_TO_INT(
+        g_object_get_data(G_OBJECT(event_box), "explicit-font-size")
+    );
+    if (explicit_font_size > 0)
         return;
 
     font_size = compute_font_size(height);
@@ -35,11 +152,25 @@ void ui_value_item_apply_font_size(GtkWidget *event_box, gint height) {
     pango_attr_list_unref(attrs);
 }
 
+void ui_value_item_refresh_style(GtkWidget *widget) {
+    LayoutItem *item;
+
+    if (!widget)
+        return;
+    item = ui_value_item_get_layout_item(widget);
+    if (!item)
+        return;
+
+    apply_inline_css(widget, item);
+    gtk_widget_queue_draw(widget);
+}
+
 static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
     GtkWidget *canvas;
     LayoutItem *item;
     guint resize_edges;
     GPtrArray *selected_items;
+    (void)user_data;
 
     if (event->button != 1)
         return FALSE;
@@ -73,20 +204,20 @@ static gboolean on_button_press(GtkWidget *widget, GdkEventButton *event, gpoint
             g_object_set_data(
                 G_OBJECT(selected_widget),
                 "origin-x",
-                GINT_TO_POINTER(selected_item->x)
+                GINT_TO_POINTER(selected_item->location.x)
             );
             g_object_set_data(
                 G_OBJECT(selected_widget),
                 "origin-y",
-                GINT_TO_POINTER(selected_item->y)
+                GINT_TO_POINTER(selected_item->location.y)
             );
         }
     }
 
     g_object_set_data(G_OBJECT(widget), "drag-start-root-x", GINT_TO_POINTER((int)event->x_root));
     g_object_set_data(G_OBJECT(widget), "drag-start-root-y", GINT_TO_POINTER((int)event->y_root));
-    g_object_set_data(G_OBJECT(widget), "origin-x", GINT_TO_POINTER((int)item->x));
-    g_object_set_data(G_OBJECT(widget), "origin-y", GINT_TO_POINTER((int)item->y));
+    g_object_set_data(G_OBJECT(widget), "origin-x", GINT_TO_POINTER((int)item->location.x));
+    g_object_set_data(G_OBJECT(widget), "origin-y", GINT_TO_POINTER((int)item->location.y));
     g_object_set_data(G_OBJECT(widget), "origin-width", GINT_TO_POINTER((int)item->width));
     g_object_set_data(G_OBJECT(widget), "origin-height", GINT_TO_POINTER((int)item->height));
 
@@ -113,6 +244,7 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
     int origin_x, origin_y;
     int origin_w, origin_h;
     int dx, dy;
+    (void)user_data;
 
     canvas = gtk_widget_get_parent(widget);
     item = ui_value_item_get_layout_item(widget);
@@ -159,23 +291,23 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
                 int base_y =
                     GPOINTER_TO_INT(g_object_get_data(G_OBJECT(selected_widget), "origin-y"));
 
-                selected_item->x = base_x + dx;
-                selected_item->y = base_y + dy;
+                selected_item->location.x = base_x + dx;
+                selected_item->location.y = base_y + dy;
 
                 gtk_fixed_move(
                     GTK_FIXED(canvas),
                     selected_widget,
-                    selected_item->x,
-                    selected_item->y
+                    selected_item->location.x,
+                    selected_item->location.y
                 );
             }
 
             return TRUE;
         }
 
-        item->x = origin_x + dx;
-        item->y = origin_y + dy;
-        gtk_fixed_move(GTK_FIXED(canvas), widget, item->x, item->y);
+        item->location.x = origin_x + dx;
+        item->location.y = origin_y + dy;
+        gtk_fixed_move(GTK_FIXED(canvas), widget, item->location.x, item->location.y);
 
         return TRUE;
     }
@@ -217,8 +349,8 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
                 new_h = MIN_ITEM_HEIGHT;
         }
 
-        item->x = new_x;
-        item->y = new_y;
+        item->location.x = new_x;
+        item->location.y = new_y;
         item->width = new_w;
         item->height = new_h;
 
@@ -237,6 +369,8 @@ static gboolean on_motion(GtkWidget *widget, GdkEventMotion *event, gpointer use
 }
 
 static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpointer user_data) {
+    (void)event;
+    (void)user_data;
     g_object_set_data(G_OBJECT(widget), "dragging", GINT_TO_POINTER(0));
     g_object_set_data(G_OBJECT(widget), "resizing", GINT_TO_POINTER(0));
     g_object_set_data(G_OBJECT(widget), "resize-edges", GINT_TO_POINTER(RESIZE_NONE));
@@ -248,11 +382,24 @@ static gboolean on_button_release(GtkWidget *widget, GdkEventButton *event, gpoi
 static gboolean on_leave_notify(GtkWidget *widget, GdkEventCrossing *event, gpointer user_data) {
     gboolean dragging = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "dragging"));
     gboolean resizing = GPOINTER_TO_INT(g_object_get_data(G_OBJECT(widget), "resizing"));
+    (void)event;
+    (void)user_data;
 
     if (!dragging && !resizing)
         ui_resize_reset_widget_cursor(widget);
 
     return FALSE;
+}
+
+static void on_event_box_destroy(GtkWidget *widget, gpointer user_data) {
+    GtkCssProvider *provider;
+    (void)user_data;
+
+    provider = g_object_get_data(G_OBJECT(widget), "css-provider");
+    if (provider) {
+        g_object_unref(provider);
+        g_object_set_data(G_OBJECT(widget), "css-provider", NULL);
+    }
 }
 
 GtkWidget *ui_value_item_create(const LayoutItem *item) {
@@ -307,6 +454,7 @@ GtkWidget *ui_value_item_create(const LayoutItem *item) {
     g_signal_connect(event_box, "motion-notify-event", G_CALLBACK(on_motion), NULL);
     g_signal_connect(event_box, "button-release-event", G_CALLBACK(on_button_release), NULL);
     g_signal_connect(event_box, "leave-notify-event", G_CALLBACK(on_leave_notify), NULL);
+    g_signal_connect(event_box, "destroy", G_CALLBACK(on_event_box_destroy), NULL);
 
     g_object_set_data(G_OBJECT(event_box), "value-label", label_value);
     g_object_set_data(G_OBJECT(event_box), "id-label", label_id);
@@ -315,7 +463,11 @@ GtkWidget *ui_value_item_create(const LayoutItem *item) {
     g_object_set_data(G_OBJECT(event_box), "editable", GINT_TO_POINTER(FALSE));
 
     gtk_widget_show_all(event_box);
-    ui_value_item_apply_font_size(event_box, item->height);
+
+    apply_inline_css(event_box, item);
+    if (item->font_size <= 0)
+        ui_value_item_apply_font_size(event_box, item->height);
+
     return event_box;
 }
 

@@ -2,4 +2,6 @@
 
 #include <gtk/gtk.h>
 
-GtkWidget *ui_marquee_create(const gchar *content);
+#include "common/types.h"
+
+GtkWidget *ui_marquee_create(const MarqueeConfig *cfg);

@@ -4,5 +4,34 @@
   "layout_file_path": "config/layout.json",
   "css_file_path": "assets/app.css",
   "editor_password": "6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b",
-  "marquee_content": "This is marquee"
+  "marquee": {
+    "content": "Welcome",
+    "location": { "x": 0, "y": 0 },
+    "size":     { "width": 0, "height": 40 },
+    "font_size": 16,
+    "font_style": "bold",
+    "color": "#FFFFFF"
+  },
+  "time_zone": {
+    "format": "hh:mm:ss",
+    "location": { "x": 20, "y": 20 },
+    "size":     { "width": 0, "height": 0 },
+    "font_size": 18,
+    "font_style": "bold",
+    "color": "#FFFFFF",
+    "visibility": true
+  },
+  "date_zone": {
+    "format": "dd/mm/yy",
+    "location": { "x": 20, "y": 50 },
+    "size":     { "width": 0, "height": 0 },
+    "font_size": 14,
+    "font_style": "bold",
+    "color": "#FFFFFF",
+    "visibility": true
+  },
+  "network": {
+    "ip_address": "192.168.1.100",
+    "ws_port": 8765
+  }
 }

@@ -3,6 +3,10 @@
 #include <json-glib/json-glib.h>
 #include <glib.h>
 
+#define DEFAULT_FONT_STYLE       "bold"
+#define DEFAULT_FONT_COLOR       "#000000"
+#define DEFAULT_BACKGROUND_COLOR "#FFFFFF"
+
 static LayoutItem *layout_item_new(void) { return g_new0(LayoutItem, 1); }
 
 static gchar *dup_string(JsonObject *obj, const gchar *key) {
@@ -12,17 +16,56 @@ static gchar *dup_string(JsonObject *obj, const gchar *key) {
     return g_strdup(json_object_get_string_member(obj, key));
 }
 
+static gchar *dup_string_or_default(JsonObject *obj, const gchar *key, const gchar *fallback) {
+    gchar *out = dup_string(obj, key);
+    if (!out)
+        out = g_strdup(fallback);
+    return out;
+}
+
+static gint json_get_int_or(JsonObject *obj, const gchar *key, gint fallback) {
+    if (!json_object_has_member(obj, key))
+        return fallback;
+    return (gint)json_object_get_int_member(obj, key);
+}
+
+static gboolean json_get_bool_or(JsonObject *obj, const gchar *key, gboolean fallback) {
+    if (!json_object_has_member(obj, key))
+        return fallback;
+    return json_object_get_boolean_member(obj, key);
+}
+
+static void read_location(JsonObject *obj, Point *out, gint legacy_x, gint legacy_y) {
+    out->x = legacy_x;
+    out->y = legacy_y;
+
+    if (!json_object_has_member(obj, "location"))
+        return;
+
+    JsonObject *loc = json_object_get_object_member(obj, "location");
+    if (!loc)
+        return;
+
+    out->x = json_get_int_or(loc, "x", legacy_x);
+    out->y = json_get_int_or(loc, "y", legacy_y);
+}
+
 static void add_item_to_builder(JsonBuilder *builder, const LayoutItem *item) {
     json_builder_begin_object(builder);
 
     json_builder_set_member_name(builder, "_id");
     json_builder_add_string_value(builder, item->_id ? item->_id : "");
 
-    json_builder_set_member_name(builder, "x");
-    json_builder_add_int_value(builder, item->x);
+    json_builder_set_member_name(builder, "index");
+    json_builder_add_int_value(builder, item->index);
 
+    json_builder_set_member_name(builder, "location");
+    json_builder_begin_object(builder);
+    json_builder_set_member_name(builder, "x");
+    json_builder_add_int_value(builder, item->location.x);
     json_builder_set_member_name(builder, "y");
-    json_builder_add_int_value(builder, item->y);
+    json_builder_add_int_value(builder, item->location.y);
+    json_builder_end_object(builder);
 
     json_builder_set_member_name(builder, "width");
     json_builder_add_int_value(builder, item->width);
@@ -32,6 +75,23 @@ static void add_item_to_builder(JsonBuilder *builder, const LayoutItem *item) {
 
     json_builder_set_member_name(builder, "value");
     json_builder_add_string_value(builder, item->value ? item->value : "");
+
+    json_builder_set_member_name(builder, "font_size");
+    json_builder_add_int_value(builder, item->font_size);
+
+    json_builder_set_member_name(builder, "font_style");
+    json_builder_add_string_value(builder, item->font_style ? item->font_style : DEFAULT_FONT_STYLE);
+
+    json_builder_set_member_name(builder, "font_color");
+    json_builder_add_string_value(builder, item->font_color ? item->font_color : DEFAULT_FONT_COLOR);
+
+    json_builder_set_member_name(builder, "background_color");
+    json_builder_add_string_value(
+        builder, item->background_color ? item->background_color : DEFAULT_BACKGROUND_COLOR
+    );
+
+    json_builder_set_member_name(builder, "background_transparent");
+    json_builder_add_boolean_value(builder, item->background_transparent);
 
     json_builder_end_object(builder);
 }
@@ -91,8 +151,19 @@ void layout_store_free_item(LayoutItem *item) {
 
     g_clear_pointer(&item->_id, g_free);
     g_clear_pointer(&item->value, g_free);
+    g_clear_pointer(&item->font_style, g_free);
+    g_clear_pointer(&item->font_color, g_free);
+    g_clear_pointer(&item->background_color, g_free);
 
     g_free(item);
+}
+
+static gint compare_items_by_index(gconstpointer a, gconstpointer b) {
+    const LayoutItem *ia = *(const LayoutItem * const *)a;
+    const LayoutItem *ib = *(const LayoutItem * const *)b;
+    if (ia->index < ib->index) return -1;
+    if (ia->index > ib->index) return 1;
+    return 0;
 }
 
 GPtrArray *layout_store_load(const char *file_path) {
@@ -134,16 +205,28 @@ GPtrArray *layout_store_load(const char *file_path) {
         JsonObject *obj = json_array_get_object_element(array, i);
         LayoutItem *item = layout_item_new();
 
-        item->_id = dup_string(obj, "_id");
+        item->_id   = dup_string(obj, "_id");
         item->value = dup_string(obj, "value");
+        item->index = json_get_int_or(obj, "index", (gint)i);
 
-        item->x = json_object_get_int_member(obj, "x");
-        item->y = json_object_get_int_member(obj, "y");
-        item->width = json_object_get_int_member(obj, "width");
-        item->height = json_object_get_int_member(obj, "height");
+        gint legacy_x = json_get_int_or(obj, "x", 0);
+        gint legacy_y = json_get_int_or(obj, "y", 0);
+        read_location(obj, &item->location, legacy_x, legacy_y);
+
+        item->width  = json_get_int_or(obj, "width", 140);
+        item->height = json_get_int_or(obj, "height", 40);
+
+        item->font_size  = json_get_int_or(obj, "font_size", 0);
+        item->font_style = dup_string_or_default(obj, "font_style", DEFAULT_FONT_STYLE);
+        item->font_color = dup_string_or_default(obj, "font_color", DEFAULT_FONT_COLOR);
+        item->background_color =
+            dup_string_or_default(obj, "background_color", DEFAULT_BACKGROUND_COLOR);
+        item->background_transparent = json_get_bool_or(obj, "background_transparent", TRUE);
 
         g_ptr_array_add(items, item);
     }
+
+    g_ptr_array_sort(items, compare_items_by_index);
 
     g_object_unref(parser);
 
