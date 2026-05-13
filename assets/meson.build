@@ -23,6 +23,12 @@ configure_file(
 )
 
 configure_file(
+  input: 'demo_video.mp4',
+  output: 'demo_video.mp4',
+  copy: true,
+)
+
+configure_file(
   input: 'app.css',
   output: 'app.css',
   copy: true,

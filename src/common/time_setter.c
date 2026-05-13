@@ -28,7 +28,7 @@ gboolean time_setter_apply(int year, int month, int day,
     tv.tv_sec  = epoch;
     tv.tv_usec = 0;
 
-    if (settimeofday(&tv, NULL) != 0) {
+    if (gettimeofday(&tv, NULL) != 0) {
         g_warning("[TIME] failed to set system time (requires root or CAP_SYS_TIME)");
         return FALSE;
     }
